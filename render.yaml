@@ -1,11 +1,10 @@
 services:
   - type: web
     name: supplyiq-api
-    runtime: node
+    runtime: docker
     region: frankfurt
     plan: free
-    buildCommand: cd backend && npm install --legacy-peer-deps
-    startCommand: cd backend && NODE_OPTIONS="--no-deprecation" npx vite dev --port $PORT --host 0.0.0.0
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -18,7 +17,7 @@ services:
       - key: SMTP_PASS
         sync: false
       - key: SESSION_SECRET
-        generateValue: true
+        value: 2a3f339685ea4eac09a6100da64525de2f3b25635b9b824c2a84c7f34a7e8640
       - key: NODE_ENV
         value: production
     healthCheckPath: /
