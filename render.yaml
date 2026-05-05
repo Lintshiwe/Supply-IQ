@@ -4,7 +4,7 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: cd backend && bun install && bun run build
+    buildCommand: bun install && cd backend && bun run build
     startCommand: cd backend && PORT=$PORT NODE_OPTIONS="--no-deprecation" bun run vite dev --port $PORT
     envVars:
       - key: DATABASE_URL
