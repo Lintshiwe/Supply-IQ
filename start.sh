@@ -48,7 +48,7 @@ start_docker() {
   docker compose up -d backend
   echo "│ All services started!                       │"
   echo "├─────────────────────────────────────────────┤"
-  echo "│ Backend:  http://localhost:8080              │"
+  echo "│ Backend:  http://localhost:8082              │"
   echo "│ Database: postgres://postgres:postgres@localhost:5432/supplyiq │"
   echo "└─────────────────────────────────────────────┘"
 }
@@ -70,7 +70,7 @@ start_local() {
     export $(grep -v '^#' .env | xargs)
   fi
 
-  echo "│ Starting backend on :8080...                 │"
+  echo "│ Starting backend on :8082...                 │"
   cd backend && bun run dev &
   BACKEND_PID=$!
 
@@ -80,7 +80,7 @@ start_local() {
 
   echo "├─────────────────────────────────────────────┤"
   echo "│ Landing:  http://localhost:5173              │"
-  echo "│ Backend:  http://localhost:8080              │"
+  echo "│ Backend:  http://localhost:8082              │"
   echo "└─────────────────────────────────────────────┘"
   echo ""
   echo "Press Ctrl+C to stop all services"

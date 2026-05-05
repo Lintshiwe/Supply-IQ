@@ -2,7 +2,7 @@ const { app, BrowserWindow, Menu } = require("electron");
 const path = require("path");
 
 // Use localhost by default, override with SUPPLYIQ_URL env var
-const APP_URL = process.env.SUPPLYIQ_URL || "http://localhost:8080";
+const APP_URL = process.env.SUPPLYIQ_URL || "http://localhost:8082";
 
 // Set app name for Windows taskbar / macOS dock
 app.setName("SupplyIQ");

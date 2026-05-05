@@ -5,12 +5,12 @@ export default defineConfig({
   timeout: 30000,
   retries: 0,
   use: {
-    baseURL: "http://localhost:8080",
+    baseURL: "http://localhost:8082",
     trace: "on-first-retry",
   },
   webServer: {
     command: "bun run dev",
-    url: "http://localhost:8080",
+    url: "http://localhost:8082",
     reuseExistingServer: true,
   },
 });
