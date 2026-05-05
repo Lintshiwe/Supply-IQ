@@ -4,8 +4,8 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: bun install && cd backend && bun run build
-    startCommand: cd backend && PORT=$PORT NODE_OPTIONS="--no-deprecation" bun run vite dev --port $PORT
+    buildCommand: cd backend && npm install --legacy-peer-deps && npm run build
+    startCommand: cd backend && NODE_OPTIONS="--no-deprecation" node node_modules/vite/bin/vite.js dev --port $PORT --host 0.0.0.0
     envVars:
       - key: DATABASE_URL
         sync: false
