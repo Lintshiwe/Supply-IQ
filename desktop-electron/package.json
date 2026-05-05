@@ -22,10 +22,8 @@
       "assets/**"
     ],
     "win": {
-      "target": ["nsis", "portable"],
-      "icon": "assets/icon.ico",
-      "sign": null,
-      "signAndEditExecutable": false
+      "target": "portable",
+      "icon": "assets/icon.ico"
     },
     "mac": {
       "target": "dmg",
@@ -36,16 +34,6 @@
       "target": ["AppImage", "deb"],
       "icon": "assets/icon.png",
       "category": "Office"
-    },
-    "nsis": {
-      "oneClick": true,
-      "perMachine": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "SupplyIQ",
-      "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico",
-      "installerHeaderIcon": "assets/icon.ico"
     }
   },
   "devDependencies": {
