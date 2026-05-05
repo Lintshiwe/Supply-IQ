@@ -33,16 +33,14 @@ jobs:
 
       - name: Upload installer to Release
         run: |
-          echo "Looking for installer files:"
-          Get-ChildItem -Path desktop-electron\dist-electron -Recurse -Filter "*.exe" | ForEach-Object { Write-Host "  $($_.FullName) ($($_.Length) bytes)" }
-          $EXE = Get-ChildItem -Path desktop-electron\dist-electron -Recurse -Filter "*.exe" | Select-Object -First 1
+          $EXE = Get-ChildItem -Path desktop-electron\dist-electron -Recurse -Filter "*.exe" | Where-Object { $_.Name -like "*Setup*" } | Select-Object -First 1
+          if (-not $EXE) { $EXE = Get-ChildItem -Path desktop-electron\dist-electron -Recurse -Filter "*.exe" | Select-Object -First 1 }
           if ($EXE) {
-            Write-Host "Uploading: $($EXE.Name)"
-            gh release upload v1.0.5 $EXE.FullName --clobber --repo Lintshiwe/Supply-IQ
-            # Also delete old zip if present
-            gh release delete-asset v1.0.5 SupplyIQ-1.0.5-win.zip --yes --repo Lintshiwe/Supply-IQ 2>$null
+            Write-Host "Uploading: $($EXE.Name) ($($EXE.Length) bytes)"
+            gh release upload v1.0.5 "$($EXE.FullName)" --clobber --repo Lintshiwe/Supply-IQ
           } else {
             Write-Host "No .exe found!"
+            Get-ChildItem -Path desktop-electron\dist-electron -Recurse
             exit 1
           }
         env:
