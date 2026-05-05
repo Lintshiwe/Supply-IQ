@@ -23,6 +23,18 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
 
   try {
     const result = await routeApiRequest(method, path, body, url.searchParams);
+
+    // Handle file download response
+    if (result && typeof result === "object" && "filename" in result && "content" in result) {
+      const fileResult = result as { filename: string; content: string; mimeType: string };
+      res.writeHead(200, {
+        "Content-Type": fileResult.mimeType,
+        "Content-Disposition": `attachment; filename="${fileResult.filename}"`,
+      });
+      res.end(fileResult.content);
+      return true;
+    }
+
     sendJson(res, 200, result);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
@@ -82,6 +94,29 @@ async function routeApiRequest(
   if (path === "/api/cancel" && method === "POST") {
     const { cancelSubscription } = await import("./auth");
     return cancelSubscription(body as any);
+  }
+
+  // Device management
+  if (path === "/api/devices" && method === "GET") {
+    const { getDevices } = await import("./auth");
+    return getDevices({ workspaceId: params.get("workspaceId") || "" });
+  }
+  if (path === "/api/devices" && method === "POST") {
+    const { registerDevice } = await import("./auth");
+    return registerDevice(body as any);
+  }
+  if (path === "/api/devices/remove" && method === "POST") {
+    const { removeDevice } = await import("./auth");
+    return removeDevice(body as any);
+  }
+
+  // Download activation key file
+  if (path === "/api/download-key" && method === "GET") {
+    const { downloadActivationKey } = await import("./auth");
+    return downloadActivationKey({
+      workspaceId: params.get("workspaceId") || "",
+      userId: params.get("userId") || "",
+    });
   }
 
   throw new Error(`Unknown API endpoint: ${method} ${path}`);

@@ -13,7 +13,6 @@ import {
   ChevronRight,
   HelpCircle,
   Bell,
-  Box,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -100,10 +99,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <nav data-tour="sidebar" className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-14 items-center gap-2.5 px-5">
-        <Box className="h-6 w-6 text-sidebar-primary shrink-0" />
-        <span className="text-lg font-semibold tracking-tight text-sidebar-primary-foreground">
-          SupplyIQ
-        </span>
+        <img src="/logo.svg" alt="SupplyIQ" className="h-7" />
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-2">
