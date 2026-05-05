@@ -1,6 +1,39 @@
 import { createServer } from "node:http";
+import { readFileSync, existsSync } from "node:fs";
+import { join, extname, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const PORT = process.env.PORT || 8080;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const STATIC_DIR = join(__dirname, "dist", "client");
+
+const MIME_TYPES = {
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".woff2": "font/woff2",
+  ".json": "application/json",
+  ".html": "text/html",
+};
+
+function serveStatic(url, res) {
+  const filePath = join(STATIC_DIR, url);
+  if (!existsSync(filePath)) return false;
+
+  const ext = extname(filePath);
+  const mime = MIME_TYPES[ext] || "application/octet-stream";
+
+  try {
+    const data = readFileSync(filePath);
+    res.writeHead(200, { "Content-Type": mime, "Content-Length": data.length });
+    res.end(data);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 async function start() {
   try {
@@ -19,6 +52,11 @@ async function start() {
       if (req.url === "/api/health") {
         res.writeHead(200, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ status: "healthy", version: "1.0.5" }));
+      }
+
+      // Serve static assets (JS, CSS, images, fonts)
+      if (req.url && /\.(js|css|svg|png|jpg|woff2|json|ico)$/.test(req.url)) {
+        if (serveStatic(req.url, res)) return;
       }
 
       try {
