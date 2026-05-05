@@ -6,7 +6,7 @@
       "name": "tanstack_start_ts",
     },
     "backend": {
-      "name": "@stackwise/backend",
+      "name": "@supplyiq/backend",
       "dependencies": {
         "@cloudflare/vite-plugin": "^1.25.5",
         "@hookform/resolvers": "^5.2.2",
@@ -37,7 +37,7 @@
         "@radix-ui/react-toggle": "^1.1.10",
         "@radix-ui/react-toggle-group": "^1.1.11",
         "@radix-ui/react-tooltip": "^1.2.8",
-        "@stackwise/shared": "workspace:*",
+        "@supplyiq/shared": "workspace:*",
         "@tailwindcss/vite": "^4.2.1",
         "@tanstack/react-query": "^5.83.0",
         "@tanstack/react-router": "^1.162.9",
@@ -87,9 +87,9 @@
       },
     },
     "desktop": {
-      "name": "@stackwise/desktop",
+      "name": "@supplyiq/desktop",
       "dependencies": {
-        "@stackwise/backend": "workspace:*",
+        "@supplyiq/backend": "workspace:*",
         "@tauri-apps/api": "^2.3.0",
         "@tauri-apps/plugin-shell": "^2.2.1",
       },
@@ -100,7 +100,7 @@
       },
     },
     "packages/shared": {
-      "name": "@stackwise/shared",
+      "name": "@supplyiq/shared",
       "dependencies": {
         "clsx": "^2.1.1",
         "tailwind-merge": "^3.5.0",
@@ -528,13 +528,13 @@
 
     "@speed-highlight/core": ["@speed-highlight/core@1.2.15", "", {}, "sha512-BMq1K3DsElxDWawkX6eLg9+CKJrTVGCBAWVuHXVUV2u0s2711qiChLSId6ikYPfxhdYocLNt3wWwSvDiTvFabw=="],
 
-    "@stackwise/backend": ["@stackwise/backend@workspace:backend"],
-
-    "@stackwise/desktop": ["@stackwise/desktop@workspace:desktop"],
-
-    "@stackwise/shared": ["@stackwise/shared@workspace:packages/shared"],
-
     "@standard-schema/utils": ["@standard-schema/utils@0.3.0", "", {}, "sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g=="],
+
+    "@supplyiq/backend": ["@supplyiq/backend@workspace:backend"],
+
+    "@supplyiq/desktop": ["@supplyiq/desktop@workspace:desktop"],
+
+    "@supplyiq/shared": ["@supplyiq/shared@workspace:packages/shared"],
 
     "@swc/helpers": ["@swc/helpers@0.5.15", "", { "dependencies": { "tslib": "^2.8.0" } }, "sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g=="],
 
