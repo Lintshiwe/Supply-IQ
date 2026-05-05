@@ -35,6 +35,63 @@ function serveStatic(url, res) {
   }
 }
 
+async function handleApiRoute(req, res) {
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  // Health check
+  if (req.url === "/api/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(JSON.stringify({ status: "healthy", version: "1.0.5" }));
+  }
+
+  // Parse body
+  let body = {};
+  if (req.method === "POST") {
+    try {
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      body = JSON.parse(Buffer.concat(chunks).toString());
+    } catch (e) { /* ignore parse errors */ }
+  }
+
+  try {
+    let result;
+
+    if (req.url === "/api/register" && req.method === "POST") {
+      result = { error: "Database not configured. Add DATABASE_URL on Render to enable registration.", dbRequired: true };
+    } else if (req.url === "/api/login" && req.method === "POST") {
+      result = { error: "Database not configured. Add DATABASE_URL on Render to enable login.", dbRequired: true };
+    } else if (req.url === "/api/logout" && req.method === "POST") {
+      result = { message: "Logged out" };
+    } else if (req.url === "/api/activate" && req.method === "POST") {
+      result = { error: "Database not configured.", dbRequired: true };
+    } else if (req.url === "/api/request-key" && req.method === "POST") {
+      result = { error: "Database not configured.", dbRequired: true };
+    } else if (req.url === "/api/cancel" && req.method === "POST") {
+      result = { message: "Cancelled" };
+    } else {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ error: "Unknown endpoint" }));
+    }
+
+    res.writeHead(result.error ? 400 : 200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(result));
+  } catch (e) {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Internal error" }));
+  }
+}
+
 async function start() {
   try {
     const mod = await import("./dist/server/index.js");
@@ -59,6 +116,13 @@ async function start() {
         if (serveStatic(req.url, res)) return;
       }
 
+      // Handle API requests
+      if (req.url?.startsWith("/api/")) {
+        await handleApiRoute(req, res);
+        return;
+      }
+
+      // All other requests → SSR handler
       try {
         const url = `https://${req.headers.host || "localhost"}${req.url}`;
         const headers = new Headers();
