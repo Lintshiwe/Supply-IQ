@@ -142,7 +142,7 @@
     {
       "id": "US-14-007",
       "title": "Locations page composition",
-      "description": "Compose the full /app/locations page in src/routes/app.locations.tsx. Layout: header with 'Locations' heading, location count, '+ New Location' and 'Transfer Stock' buttons (admin/manager). Two-panel layout: left panel with LocationTree (40% width), right panel with LocationSummary (60% width). On mobile: single column, tree above summary. Page title 'Locations — Stackwise'.",
+      "description": "Compose the full /app/locations page in src/routes/app.locations.tsx. Layout: header with 'Locations' heading, location count, '+ New Location' and 'Transfer Stock' buttons (admin/manager). Two-panel layout: left panel with LocationTree (40% width), right panel with LocationSummary (60% width). On mobile: single column, tree above summary. Page title 'Locations — SupplyIQ'.",
       "acceptanceCriteria": [
         "Page heading with count and action buttons",
         "Two-panel layout: tree left, summary right",

@@ -80,14 +80,14 @@
     {
       "id": "US-09-004",
       "title": "Movements page header and composition",
-      "description": "Build the full /app/movements page in src/routes/app.movements.tsx. Page header: 'Stock Movements' heading, movement count subtitle, '+ Log Movement' button (admin/manager only, amber accent). Compose: header, filter bar, movements table. Support URL query param ?item=ID to pre-filter by item (linked from item detail sheet). Set page title 'Movements — Stackwise'.",
+      "description": "Build the full /app/movements page in src/routes/app.movements.tsx. Page header: 'Stock Movements' heading, movement count subtitle, '+ Log Movement' button (admin/manager only, amber accent). Compose: header, filter bar, movements table. Support URL query param ?item=ID to pre-filter by item (linked from item detail sheet). Set page title 'Movements — SupplyIQ'.",
       "acceptanceCriteria": [
         "Page heading 'Stock Movements' with count",
         "'+ Log Movement' button for admin/manager",
         "Button opens MovementFormSheet",
         "Filter bar and table composed correctly",
         "?item=ID query param pre-filters by item",
-        "Page title 'Movements — Stackwise'",
+        "Page title 'Movements — SupplyIQ'",
         "Requestor: no log button, read-only table"
       ],
       "verification": {

@@ -189,7 +189,7 @@
     {
       "id": "US-11-009",
       "title": "Purchase orders page composition",
-      "description": "Compose the full /app/purchase-orders page in src/routes/app.purchase-orders.tsx. Header: 'Purchase Orders' heading, PO count, '+ New PO' button (admin/manager). Filters bar. Table. Detail sheet wired to row clicks. Form sheet for create/edit. URL param ?po=ID for direct linking. Page title 'Purchase Orders — Stackwise'.",
+      "description": "Compose the full /app/purchase-orders page in src/routes/app.purchase-orders.tsx. Header: 'Purchase Orders' heading, PO count, '+ New PO' button (admin/manager). Filters bar. Table. Detail sheet wired to row clicks. Form sheet for create/edit. URL param ?po=ID for direct linking. Page title 'Purchase Orders — SupplyIQ'.",
       "acceptanceCriteria": [
         "Page heading with count and New PO button",
         "Filters, table, detail sheet, form all composed",

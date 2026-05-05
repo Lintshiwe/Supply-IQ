@@ -38,7 +38,7 @@
       "prdId": "PRD-03",
       "feature": "Landing Page",
       "category": "foundation",
-      "description": "Marketing-quality landing page with Stackwise branding, 'Try Demo' button (amber), 'Sign In' button, feature highlights grid, and animated stock health visualization.",
+      "description": "Marketing-quality landing page with SupplyIQ branding, 'Try Demo' button (amber), 'Sign In' button, feature highlights grid, and animated stock health visualization.",
       "fileName": "docs/PRD-03-landing-page.json",
       "buildOrder": 3,
       "dependsOnPrds": ["PRD-01"],

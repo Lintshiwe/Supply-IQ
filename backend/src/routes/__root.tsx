@@ -12,13 +12,13 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Stackwise — Inventory Command Center" },
+      { title: "SupplyIQ — Inventory Command Center" },
       { name: "description", content: "Industrial inventory management for multi-warehouse operations. Track stock, manage suppliers, automate reorders, and keep your team aligned." },
-      { property: "og:title", content: "Stackwise — Inventory Command Center" },
+      { property: "og:title", content: "SupplyIQ — Inventory Command Center" },
       { property: "og:description", content: "Industrial inventory management for multi-warehouse operations." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Stackwise — Inventory Command Center" },
+      { name: "twitter:title", content: "SupplyIQ — Inventory Command Center" },
       { name: "twitter:description", content: "Industrial inventory management for multi-warehouse operations." },
     ],
     links: [

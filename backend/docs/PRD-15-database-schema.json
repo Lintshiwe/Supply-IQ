@@ -1,7 +1,7 @@
 {
   "prdId": "PRD-15",
   "feature": "Database Schema & RLS Policies",
-  "description": "Define the complete Supabase database schema for Stackwise. This includes all tables (categories, items, suppliers, locations, stock_movements, purchase_orders, purchase_order_items, inventory_requests, request_items, custom_field_definitions, user_roles, notifications, profiles), their relationships via foreign keys, appropriate indexes for query performance, and comprehensive Row-Level Security policies. Since we're mocking for demo mode first, this PRD creates the migration SQL files and documents the schema — actual Supabase enablement happens when Cloud is connected. The schema must support the three-role access model (Admin, Manager, Requestor) with a security definer function for role checks.",
+  "description": "Define the complete Supabase database schema for SupplyIQ. This includes all tables (categories, items, suppliers, locations, stock_movements, purchase_orders, purchase_order_items, inventory_requests, request_items, custom_field_definitions, user_roles, notifications, profiles), their relationships via foreign keys, appropriate indexes for query performance, and comprehensive Row-Level Security policies. Since we're mocking for demo mode first, this PRD creates the migration SQL files and documents the schema — actual Supabase enablement happens when Cloud is connected. The schema must support the three-role access model (Admin, Manager, Requestor) with a security definer function for role checks.",
   "buildOrder": 4,
   "dependsOnPrds": ["PRD-04"],
   "stories": [

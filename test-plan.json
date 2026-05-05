@@ -1,5 +1,5 @@
 {
-  "app_name": "Stackwise — Inventory Command Center",
+  "app_name": "SupplyIQ — Inventory Command Center",
   "generated_at": "2026-03-18T00:00:00.000Z",
   "total_tests": 35,
   "stats": {
@@ -15,7 +15,7 @@
       "category": "e2e",
       "feature": "Landing Page",
       "title": "Landing page renders with hero and nav",
-      "description": "Verify the landing page loads with the Stackwise branding, hero heading, and Try Demo button",
+      "description": "Verify the landing page loads with the SupplyIQ branding, hero heading, and Try Demo button",
       "preconditions": [
         "Navigate to /"
       ],
@@ -143,8 +143,8 @@
         "Step 2: Wait for dashboard to load",
         "Step 3: Check for tour overlay"
       ],
-      "expected_result": "Tour overlay with 'Welcome to Stackwise!' text appears",
-      "pass_criteria": "Text 'Welcome to Stackwise!' is visible within 2 seconds of dashboard load",
+      "expected_result": "Tour overlay with 'Welcome to SupplyIQ!' text appears",
+      "pass_criteria": "Text 'Welcome to SupplyIQ!' is visible within 2 seconds of dashboard load",
       "status": "passed",
       "passed": true,
       "fix_attempts": 0,
@@ -778,7 +778,7 @@
         "Step 2: Click on 'Catalog' tab",
         "Step 3: Verify the image alt text changes"
       ],
-      "expected_result": "Image switches to show 'Stackwise Catalog view'",
+      "expected_result": "Image switches to show 'SupplyIQ Catalog view'",
       "pass_criteria": "An image with alt text containing 'Catalog' is visible after clicking the Catalog tab",
       "status": "passed",
       "passed": true,

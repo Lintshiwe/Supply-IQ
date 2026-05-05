@@ -140,7 +140,7 @@
     {
       "id": "US-10-007",
       "title": "Suppliers page composition",
-      "description": "Compose the full /app/suppliers page in src/routes/app.suppliers.tsx. Header: 'Supplier Directory' heading, supplier count, '+ New Supplier' button (admin/manager). Table with search. Detail sheet wired to row clicks. URL param ?supplier=ID for direct linking. Page title 'Suppliers — Stackwise'.",
+      "description": "Compose the full /app/suppliers page in src/routes/app.suppliers.tsx. Header: 'Supplier Directory' heading, supplier count, '+ New Supplier' button (admin/manager). Table with search. Detail sheet wired to row clicks. URL param ?supplier=ID for direct linking. Page title 'Suppliers — SupplyIQ'.",
       "acceptanceCriteria": [
         "Page heading with count and New button",
         "Table, search, detail sheet all composed",

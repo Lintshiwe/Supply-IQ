@@ -142,7 +142,7 @@
     {
       "id": "US-19-007",
       "title": "Insights page composition",
-      "description": "Create src/routes/app.insights.tsx — the /app/insights page. Header: 'AI Insights' heading with beta badge. Layout: ForecastSummary metrics at top, DemandForecastChart below, then full list of ReorderSuggestionCards (all suggestions, not just top 5). Filter suggestions by urgency (all, critical, moderate, low) and confidence (all, high, medium, low). Sort by days until stockout or by delta. Page title 'Insights — Stackwise'. Admin/Manager only.",
+      "description": "Create src/routes/app.insights.tsx — the /app/insights page. Header: 'AI Insights' heading with beta badge. Layout: ForecastSummary metrics at top, DemandForecastChart below, then full list of ReorderSuggestionCards (all suggestions, not just top 5). Filter suggestions by urgency (all, critical, moderate, low) and confidence (all, high, medium, low). Sort by days until stockout or by delta. Page title 'Insights — SupplyIQ'. Admin/Manager only.",
       "acceptanceCriteria": [
         "Page with metrics, chart, and suggestion cards",
         "Beta badge on heading",

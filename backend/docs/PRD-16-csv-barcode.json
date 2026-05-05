@@ -8,7 +8,7 @@
     {
       "id": "US-16-001",
       "title": "CSV export for items",
-      "description": "Create src/components/data/CSVExportButton.tsx — a reusable export button. For items: exports all currently filtered items as CSV with columns: Name, SKU, Barcode, Category, Supplier, Location, Quantity, Reorder Point, Unit Cost, Price, Status. Filename: stackwise-items-YYYY-MM-DD.csv. Uses Blob and URL.createObjectURL for client-side download. Button shows in catalog page header. Loading state while generating.",
+      "description": "Create src/components/data/CSVExportButton.tsx — a reusable export button. For items: exports all currently filtered items as CSV with columns: Name, SKU, Barcode, Category, Supplier, Location, Quantity, Reorder Point, Unit Cost, Price, Status. Filename: supplyiq-items-YYYY-MM-DD.csv. Uses Blob and URL.createObjectURL for client-side download. Button shows in catalog page header. Loading state while generating.",
       "acceptanceCriteria": [
         "Export button in catalog page header",
         "Downloads CSV with all item columns",

@@ -96,7 +96,7 @@
     {
       "id": "US-12-005",
       "title": "Printable PO summary",
-      "description": "Create src/components/purchase-orders/POPrintView.tsx — a print-optimized view of a PO. Triggered by a 'Print' button in the PO detail sheet. Uses window.print() with @media print CSS. Layout: company name 'Stackwise' header, PO number, date, supplier info (name, contact, address), line items table (item, SKU, qty ordered, unit cost, line total), total cost, expected delivery, notes, and receiving status summary. Hide all app chrome in print. A4 portrait optimized.",
+      "description": "Create src/components/purchase-orders/POPrintView.tsx — a print-optimized view of a PO. Triggered by a 'Print' button in the PO detail sheet. Uses window.print() with @media print CSS. Layout: company name 'SupplyIQ' header, PO number, date, supplier info (name, contact, address), line items table (item, SKU, qty ordered, unit cost, line total), total cost, expected delivery, notes, and receiving status summary. Hide all app chrome in print. A4 portrait optimized.",
       "acceptanceCriteria": [
         "Print button in PO detail sheet",
         "window.print() triggered",
@@ -113,7 +113,7 @@
       "priority": 5,
       "dependencies": ["US-11-007"],
       "isPassed": true,
-      "notes": "POPrintView component with Stackwise header, supplier info, line items, totals, receiving summary. Print button triggers window.print(). @media print CSS hides app chrome. A4 portrait."
+      "notes": "POPrintView component with SupplyIQ header, supplier info, line items, totals, receiving summary. Print button triggers window.print(). @media print CSS hides app chrome. A4 portrait."
     },
     {
       "id": "US-12-006",

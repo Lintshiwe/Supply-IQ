@@ -1,5 +1,5 @@
 {
-  "name": "@stackwise/shared",
+  "name": "@supplyiq/shared",
   "private": true,
   "type": "module",
   "exports": {

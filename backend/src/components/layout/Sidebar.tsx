@@ -102,7 +102,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       <div className="flex h-14 items-center gap-2.5 px-5">
         <Box className="h-6 w-6 text-sidebar-primary shrink-0" />
         <span className="text-lg font-semibold tracking-tight text-sidebar-primary-foreground">
-          Stackwise
+          SupplyIQ
         </span>
       </div>
 

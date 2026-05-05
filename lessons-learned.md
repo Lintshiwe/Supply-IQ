@@ -27,7 +27,7 @@ This file is read before every test run and updated after. It accumulates practi
 - Demo banner contains role switcher buttons with text "Admin", "Manager", "Requestor".
 - Demo banner dismiss button has `aria-label="Dismiss demo banner"`.
 - Catalog uses a standard `<table>` with `<thead>` and `<tbody>` elements.
-- The onboarding tour uses an overlay component — look for "Welcome to Stackwise!" text.
+- The onboarding tour uses an overlay component — look for "Welcome to SupplyIQ!" text.
 - Command palette is triggered by `Ctrl+K` / `Meta+K` keyboard shortcut.
 - User dropdown is in the Header component — contains "Exit Demo" option.
 

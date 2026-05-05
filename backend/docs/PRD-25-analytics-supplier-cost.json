@@ -118,7 +118,7 @@
     {
       "id": "US-25-006",
       "title": "Export supplier reports as CSV",
-      "description": "Add 'Export Supplier Report' button to the Suppliers analytics tab. Generates a CSV with two sections: Supplier Scorecards (one row per supplier with all metrics) and Spending by Category (one row per category with cost). File named 'stackwise-supplier-report-YYYY-MM-DD.csv'. Client-side generation with browser download. Respects current filters.",
+      "description": "Add 'Export Supplier Report' button to the Suppliers analytics tab. Generates a CSV with two sections: Supplier Scorecards (one row per supplier with all metrics) and Spending by Category (one row per category with cost). File named 'supplyiq-supplier-report-YYYY-MM-DD.csv'. Client-side generation with browser download. Respects current filters.",
       "acceptanceCriteria": [
         "Export button on Suppliers tab",
         "CSV includes supplier scorecard data and category cost data",

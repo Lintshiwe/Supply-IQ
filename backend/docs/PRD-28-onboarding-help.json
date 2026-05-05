@@ -1,7 +1,7 @@
 {
   "prdId": "PRD-28",
   "feature": "Onboarding & Help",
-  "description": "First-time user onboarding experience and contextual help system for Stackwise. Includes a multi-step onboarding tooltip tour that highlights key features on first login (dashboard metrics, sidebar navigation, catalog, command palette), a help documentation page at /app/help with searchable FAQ and feature guides, contextual help icons (?) on complex forms that show explanatory popovers, and a demo mode walkthrough overlay that guides new users through the core workflow (browse catalog → log movement → create PO). Onboarding state is persisted so it only shows once per user.",
+  "description": "First-time user onboarding experience and contextual help system for SupplyIQ. Includes a multi-step onboarding tooltip tour that highlights key features on first login (dashboard metrics, sidebar navigation, catalog, command palette), a help documentation page at /app/help with searchable FAQ and feature guides, contextual help icons (?) on complex forms that show explanatory popovers, and a demo mode walkthrough overlay that guides new users through the core workflow (browse catalog → log movement → create PO). Onboarding state is persisted so it only shows once per user.",
   "buildOrder": 27,
   "dependsOnPrds": ["PRD-02", "PRD-06"],
   "stories": [
@@ -32,7 +32,7 @@
     {
       "id": "US-28-002",
       "title": "Dashboard onboarding tour steps",
-      "description": "Define the onboarding tour step sequence and add data-tour attributes to target elements. Steps: 1) Welcome — 'Welcome to Stackwise! Let's take a quick tour.' (no target, centered modal). 2) Sidebar — 'Navigate between sections here' (target: sidebar nav). 3) Metric Cards — 'Your stock health at a glance' (target: metric row). 4) Needs Attention — 'Items that need action appear here' (target: needs-attention section). 5) Command Palette — 'Press CMD+K to search anything' (target: header search). 6) Done — 'You're all set! Explore or try the demo walkthrough.' (no target, centered). Add data-tour='sidebar', data-tour='metrics', etc. to the relevant components.",
+      "description": "Define the onboarding tour step sequence and add data-tour attributes to target elements. Steps: 1) Welcome — 'Welcome to SupplyIQ! Let's take a quick tour.' (no target, centered modal). 2) Sidebar — 'Navigate between sections here' (target: sidebar nav). 3) Metric Cards — 'Your stock health at a glance' (target: metric row). 4) Needs Attention — 'Items that need action appear here' (target: needs-attention section). 5) Command Palette — 'Press CMD+K to search anything' (target: header search). 6) Done — 'You're all set! Explore or try the demo walkthrough.' (no target, centered). Add data-tour='sidebar', data-tour='metrics', etc. to the relevant components.",
       "acceptanceCriteria": [
         "6 tour steps defined with titles, descriptions, and targets",
         "data-tour attributes added to sidebar, metric row, needs-attention, header search",

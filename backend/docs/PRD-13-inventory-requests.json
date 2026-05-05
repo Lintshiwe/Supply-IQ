@@ -166,7 +166,7 @@
     {
       "id": "US-13-008",
       "title": "Requests page composition",
-      "description": "Compose the full /app/requests page in src/routes/app.requests.tsx. Header: 'Inventory Requests' heading, request count, '+ New Request' button (all roles). Tabs for manager/admin, simple list for requestor. Detail sheet wired to row clicks. Form sheet for new requests. URL param ?request=ID for direct linking. Page title 'Requests — Stackwise'.",
+      "description": "Compose the full /app/requests page in src/routes/app.requests.tsx. Header: 'Inventory Requests' heading, request count, '+ New Request' button (all roles). Tabs for manager/admin, simple list for requestor. Detail sheet wired to row clicks. Form sheet for new requests. URL param ?request=ID for direct linking. Page title 'Requests — SupplyIQ'.",
       "acceptanceCriteria": [
         "Page heading with count and New Request button",
         "Role-based view: tabs for manager/admin, list for requestor",

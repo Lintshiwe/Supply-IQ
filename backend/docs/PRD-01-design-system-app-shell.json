@@ -1,14 +1,14 @@
 {
   "prdId": "PRD-01",
   "feature": "Design System & App Shell",
-  "description": "Establish the visual foundation and structural shell for Stackwise. This includes updating the CSS design system with a teal/amber color palette using oklch, importing Geist Sans and Geist Mono fonts, creating the authenticated app layout with a fixed 260px sidebar (grouped navigation sections for Operations, Procurement, Requests, Intelligence, Admin), a persistent top header bar with CMD+K search trigger and quick-action button, and defining all route stubs. The shell must be responsive — sidebar collapses on mobile. All subsequent features build inside this shell.",
+  "description": "Establish the visual foundation and structural shell for SupplyIQ. This includes updating the CSS design system with a teal/amber color palette using oklch, importing Geist Sans and Geist Mono fonts, creating the authenticated app layout with a fixed 260px sidebar (grouped navigation sections for Operations, Procurement, Requests, Intelligence, Admin), a persistent top header bar with CMD+K search trigger and quick-action button, and defining all route stubs. The shell must be responsive — sidebar collapses on mobile. All subsequent features build inside this shell.",
   "buildOrder": 1,
   "dependsOnPrds": [],
   "stories": [
     {
       "id": "US-01-001",
       "title": "Update CSS design tokens with teal/amber palette",
-      "description": "Replace the default shadcn color values in src/styles.css :root and .dark blocks with the Stackwise teal/amber palette from design-guidelines.md. Add custom tokens for --stock-healthy, --stock-low, --stock-out, --amber-accent. Update the @theme inline block to register any new tokens. All values must use oklch format.",
+      "description": "Replace the default shadcn color values in src/styles.css :root and .dark blocks with the SupplyIQ teal/amber palette from design-guidelines.md. Add custom tokens for --stock-healthy, --stock-low, --stock-out, --amber-accent. Update the @theme inline block to register any new tokens. All values must use oklch format.",
       "acceptanceCriteria": [
         "All :root color variables use oklch values matching design-guidelines.md",
         "Dark mode (.dark) has appropriately inverted/adjusted values",
@@ -72,11 +72,11 @@
     {
       "id": "US-01-004",
       "title": "Create app layout route with sidebar and header",
-      "description": "Create src/routes/app.tsx as a layout route with <Outlet />. It renders a fixed 260px Sidebar on the left and a Header bar at top of the content area. The main content area fills remaining width with 32px padding on desktop, 16px on mobile. Create src/components/layout/Sidebar.tsx and src/components/layout/Header.tsx as separate files. Sidebar has the Stackwise logo/wordmark at top, then grouped nav sections: Operations (Dashboard, Catalog, Movements), Procurement (Suppliers, Purchase Orders), Requests, Intelligence (Analytics, AI Insights), Admin (Settings). Each nav item uses a Lucide icon + label. Active route is highlighted with teal background. Header has a search trigger button (displays 'Search... ⌘K'), a quick-action '+' button, and a user avatar placeholder on the right.",
+      "description": "Create src/routes/app.tsx as a layout route with <Outlet />. It renders a fixed 260px Sidebar on the left and a Header bar at top of the content area. The main content area fills remaining width with 32px padding on desktop, 16px on mobile. Create src/components/layout/Sidebar.tsx and src/components/layout/Header.tsx as separate files. Sidebar has the SupplyIQ logo/wordmark at top, then grouped nav sections: Operations (Dashboard, Catalog, Movements), Procurement (Suppliers, Purchase Orders), Requests, Intelligence (Analytics, AI Insights), Admin (Settings). Each nav item uses a Lucide icon + label. Active route is highlighted with teal background. Header has a search trigger button (displays 'Search... ⌘K'), a quick-action '+' button, and a user avatar placeholder on the right.",
       "acceptanceCriteria": [
         "Layout route at /app renders sidebar + header + outlet",
         "Sidebar is exactly 260px wide on desktop, fixed position",
-        "Sidebar has Stackwise wordmark at top",
+        "Sidebar has SupplyIQ wordmark at top",
         "Nav items grouped under section labels with Lucide icons",
         "Active nav item has teal highlight background",
         "Header spans the content area with search trigger and action button",
@@ -92,7 +92,7 @@
       "priority": 4,
       "dependencies": ["US-01-001", "US-01-002"],
       "isPassed": true,
-      "notes": "Sidebar 260px, all nav groups, Stackwise wordmark, header with search+action+avatar. Mobile: sidebar hidden, hamburger visible. Zero console errors."
+      "notes": "Sidebar 260px, all nav groups, SupplyIQ wordmark, header with search+action+avatar. Mobile: sidebar hidden, hamburger visible. Zero console errors."
     },
     {
       "id": "US-01-005",

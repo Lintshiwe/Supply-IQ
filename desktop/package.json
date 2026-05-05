@@ -1,5 +1,5 @@
 {
-  "name": "@stackwise/desktop",
+  "name": "@supplyiq/desktop",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@stackwise/backend": "workspace:*",
+    "@supplyiq/backend": "workspace:*",
     "@tauri-apps/api": "^2.3.0",
     "@tauri-apps/plugin-shell": "^2.2.1"
   },

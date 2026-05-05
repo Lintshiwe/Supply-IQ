@@ -87,7 +87,7 @@ export async function seedWorkspace(workspaceId: string): Promise<void> {
     { workspaceId, type: "zero_stock" as const, title: "Out of Stock", message: "Sticky Notes (STK-1005) is out of stock", isRead: false, referenceId: null, createdAt: ts(0.1) },
     { workspaceId, type: "low_stock" as const, title: "Low Stock", message: "Blue Pens Box (STK-1004) is running low (5 remaining)", isRead: false, referenceId: null, createdAt: ts(0.2) },
     { workspaceId, type: "low_stock" as const, title: "Low Stock", message: "Nitrile Gloves (STK-1009) is running low (2 remaining)", isRead: false, referenceId: null, createdAt: ts(0.3) },
-    { workspaceId, type: "system" as const, title: "Welcome to Stackwise!", message: "Your workspace has been set up with sample data. Explore all features during your trial.", isRead: false, referenceId: null, createdAt: ts(0) },
+    { workspaceId, type: "system" as const, title: "Welcome to SupplyIQ!", message: "Your workspace has been set up with sample data. Explore all features during your trial.", isRead: false, referenceId: null, createdAt: ts(0) },
   ];
   await db.insert(notifications).values(seedNotifications);
 

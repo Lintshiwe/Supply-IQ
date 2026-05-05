@@ -1,7 +1,7 @@
 {
   "prdId": "PRD-27",
   "feature": "Mobile Responsiveness",
-  "description": "Systematic mobile responsiveness pass across all Stackwise pages, ensuring every view is fully usable at 390px viewport width. Includes collapsible sidebar to hamburger menu, responsive data tables that switch to card layout on small screens, touch-friendly action buttons with minimum 44px tap targets, a bottom navigation bar on mobile for primary sections, and page-by-page testing at 390px. This PRD treats mobile as a first-class experience, not an afterthought.",
+  "description": "Systematic mobile responsiveness pass across all SupplyIQ pages, ensuring every view is fully usable at 390px viewport width. Includes collapsible sidebar to hamburger menu, responsive data tables that switch to card layout on small screens, touch-friendly action buttons with minimum 44px tap targets, a bottom navigation bar on mobile for primary sections, and page-by-page testing at 390px. This PRD treats mobile as a first-class experience, not an afterthought.",
   "buildOrder": 26,
   "dependsOnPrds": ["PRD-01"],
   "stories": [

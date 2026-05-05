@@ -1,7 +1,7 @@
 {
   "prdId": "PRD-26",
   "feature": "Loading Skeletons & Transitions",
-  "description": "Comprehensive loading and transition polish across all Stackwise pages. Includes reusable skeleton loader components for data tables, metric cards, detail sheets, and chart areas. Smooth page transitions using framer-motion for route changes. Button loading states for all async actions (save, delete, submit). Optimistic UI updates for mutations where latency is noticeable (create item, log movement, change status). This PRD ensures every async operation has visual feedback and no blank flashes during navigation.",
+  "description": "Comprehensive loading and transition polish across all SupplyIQ pages. Includes reusable skeleton loader components for data tables, metric cards, detail sheets, and chart areas. Smooth page transitions using framer-motion for route changes. Button loading states for all async actions (save, delete, submit). Optimistic UI updates for mutations where latency is noticeable (create item, log movement, change status). This PRD ensures every async operation has visual feedback and no blank flashes during navigation.",
   "buildOrder": 25,
   "dependsOnPrds": ["PRD-06", "PRD-07"],
   "stories": [

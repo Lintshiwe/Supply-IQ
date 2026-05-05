@@ -1,7 +1,7 @@
 {
   "prdId": "PRD-02",
   "feature": "Demo Mode Infrastructure",
-  "description": "Build the complete demo mode system that lets users experience Stackwise without authentication. This includes: a React context provider (DemoContext) that wraps the app and exposes an in-memory data store with full CRUD operations; a comprehensive seed data generator producing 5 categories, 35 items (mix of healthy/low/out-of-stock), 4 suppliers, 3 hierarchical locations, 70 stock movements over 30 days, 3 pending inventory requests, and 1 open purchase order with line items; a demo banner component that persists at the top of the app shell during demo sessions with a 'Create Account' CTA; and session management that resets demo data on each new visit. The demo store must implement the same data access interface that real Supabase queries will use later, so components never know whether they're in demo or real mode.",
+  "description": "Build the complete demo mode system that lets users experience SupplyIQ without authentication. This includes: a React context provider (DemoContext) that wraps the app and exposes an in-memory data store with full CRUD operations; a comprehensive seed data generator producing 5 categories, 35 items (mix of healthy/low/out-of-stock), 4 suppliers, 3 hierarchical locations, 70 stock movements over 30 days, 3 pending inventory requests, and 1 open purchase order with line items; a demo banner component that persists at the top of the app shell during demo sessions with a 'Create Account' CTA; and session management that resets demo data on each new visit. The demo store must implement the same data access interface that real Supabase queries will use later, so components never know whether they're in demo or real mode.",
   "buildOrder": 2,
   "dependsOnPrds": ["PRD-01"],
   "stories": [
@@ -100,7 +100,7 @@
     {
       "id": "US-02-005",
       "title": "Create DemoBanner component",
-      "description": "Create src/components/layout/DemoBanner.tsx — a slim banner that appears at the very top of the page (above the header) when isDemo is true. Amber/warm background using --amber-accent token. Text: 'You're exploring Stackwise in demo mode. Data resets each session.' with a 'Create Account' button on the right (links to sign-up page, stubbed as / for now) and a small X to dismiss for the session. Banner is 40px tall, full width, sticky at top. When dismissed, stays hidden until next demo session. On mobile, text truncates to 'Demo Mode' with the CTA still visible.",
+      "description": "Create src/components/layout/DemoBanner.tsx — a slim banner that appears at the very top of the page (above the header) when isDemo is true. Amber/warm background using --amber-accent token. Text: 'You're exploring SupplyIQ in demo mode. Data resets each session.' with a 'Create Account' button on the right (links to sign-up page, stubbed as / for now) and a small X to dismiss for the session. Banner is 40px tall, full width, sticky at top. When dismissed, stays hidden until next demo session. On mobile, text truncates to 'Demo Mode' with the CTA still visible.",
       "acceptanceCriteria": [
         "Banner visible only when isDemo is true",
         "Amber background using semantic --amber-accent token",

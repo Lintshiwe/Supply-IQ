@@ -167,7 +167,7 @@
     {
       "id": "US-24-008",
       "title": "Export analytics as CSV",
-      "description": "Add an 'Export CSV' button to the analytics page header. Exports the currently filtered data as a CSV file with sections: Stock Summary (one row per item with qty, value, status), Movement Summary (one row per movement in range). File named 'stackwise-analytics-YYYY-MM-DD.csv'. Uses client-side CSV generation and browser download. Button shows loading spinner during generation.",
+      "description": "Add an 'Export CSV' button to the analytics page header. Exports the currently filtered data as a CSV file with sections: Stock Summary (one row per item with qty, value, status), Movement Summary (one row per movement in range). File named 'supplyiq-analytics-YYYY-MM-DD.csv'. Uses client-side CSV generation and browser download. Button shows loading spinner during generation.",
       "acceptanceCriteria": [
         "Export CSV button in page header",
         "CSV includes stock summary and movement data",

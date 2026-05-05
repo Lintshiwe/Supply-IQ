@@ -1,7 +1,7 @@
 {
   "prdId": "PRD-22",
   "feature": "Admin Settings — System Configuration",
-  "description": "Admin-only settings area at /app/settings providing system-wide configuration for the Stackwise inventory platform. Includes management interfaces for categories and tags (create, rename, delete with safety checks for linked items), custom field definitions (add/remove/reorder fields that appear on item detail), location hierarchy management (add/edit/delete nodes in the location tree), global reorder defaults (default reorder point, lead time, safety stock multiplier), and a demo data reset button. All sections are admin-only, enforced via route guards and PermissionGate. The page uses a tabbed layout to organize sections.",
+  "description": "Admin-only settings area at /app/settings providing system-wide configuration for the SupplyIQ inventory platform. Includes management interfaces for categories and tags (create, rename, delete with safety checks for linked items), custom field definitions (add/remove/reorder fields that appear on item detail), location hierarchy management (add/edit/delete nodes in the location tree), global reorder defaults (default reorder point, lead time, safety stock multiplier), and a demo data reset button. All sections are admin-only, enforced via route guards and PermissionGate. The page uses a tabbed layout to organize sections.",
   "buildOrder": 21,
   "dependsOnPrds": ["PRD-05", "PRD-07", "PRD-14"],
   "stories": [
