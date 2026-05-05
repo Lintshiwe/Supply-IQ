@@ -6,6 +6,9 @@ on:
     paths:
       - 'desktop-electron/**'
 
+permissions:
+  contents: write
+
 jobs:
   build-macos:
     runs-on: macos-latest
@@ -36,9 +39,14 @@ jobs:
       - name: Upload to Release
         if: github.ref == 'refs/heads/main'
         run: |
-          DMG=$(ls desktop-electron/dist-electron/*.dmg | head -1)
-          if [ -n "$DMG" ]; then
-            gh release upload v1.0.5 "$DMG" --clobber
+          DMG=$(ls desktop-electron/dist-electron/*.dmg 2>/dev/null | head -1)
+          if [ -n "$DMG" ] && [ -f "$DMG" ]; then
+            echo "Uploading $DMG"
+            gh release upload v1.0.5 "$DMG" --clobber --repo Lintshiwe/Supply-IQ
+          else
+            echo "No DMG found — listing dist-electron contents:"
+            ls -la desktop-electron/dist-electron/ || echo "Directory empty"
+            find desktop-electron/dist-electron -name "*.dmg" 2>/dev/null || echo "No .dmg files found"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
