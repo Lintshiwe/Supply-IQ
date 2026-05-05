@@ -5,9 +5,14 @@ const PORT = process.env.PORT || 8080;
 async function start() {
   try {
     const mod = await import("./dist/server/index.js");
-    const handler = mod.default || mod.createServerEntry;
 
-    if (!handler) throw new Error("No handler found");
+    // TanStack Start exports: { createServerEntry: fn, default: { fetch: fn } }
+    const workerEntry = mod.default;
+    const handler = workerEntry?.fetch || mod.createServerEntry;
+
+    if (!handler || typeof handler !== "function") {
+      throw new Error("No valid handler found in build output");
+    }
 
     const server = createServer(async (req, res) => {
       // Health check
@@ -17,8 +22,7 @@ async function start() {
       }
 
       try {
-        // Convert Node req to Web Request
-        const url = `http://${req.headers.host || "localhost"}${req.url}`;
+        const url = `https://${req.headers.host || "localhost"}${req.url}`;
         const headers = new Headers();
         for (const [k, v] of Object.entries(req.headers)) {
           if (v) headers.set(k, Array.isArray(v) ? v.join(", ") : v);
@@ -32,15 +36,9 @@ async function start() {
             })
           : undefined;
 
-        const webReq = new Request(url, {
-          method: req.method,
-          headers,
-          body,
-        });
-
+        const webReq = new Request(url, { method: req.method, headers, body });
         const response = await handler(webReq);
 
-        // Send back response
         const resHeaders = {};
         response.headers?.forEach((v, k) => { resHeaders[k] = v; });
         res.writeHead(response.status || 200, resHeaders);
@@ -56,18 +54,18 @@ async function start() {
         res.end();
       } catch (e) {
         console.error("Request error:", e.message);
-        res.writeHead(500);
-        res.end("Internal Server Error");
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal Server Error" }));
       }
     });
 
     server.listen(PORT, () => console.log(`SupplyIQ running on http://localhost:${PORT}`));
   } catch (e) {
     console.error("Startup error:", e.message);
-    // Fallback
+    // Fallback server
     const s = createServer((_, res) => {
       res.writeHead(200, { "Content-Type": "text/html" });
-      res.end("<h1>SupplyIQ</h1><p>API Running</p>");
+      res.end(`<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh"><div style="text-align:center"><h1 style="color:#84cc16">SupplyIQ</h1><p>API Running — Full site coming soon</p></div></body></html>`);
     });
     s.listen(PORT, () => console.log(`Fallback on ${PORT}`));
   }
