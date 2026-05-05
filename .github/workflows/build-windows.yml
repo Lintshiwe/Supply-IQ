@@ -33,19 +33,17 @@ jobs:
 
       - name: Upload installer to Release
         run: |
-          $EXE = Get-ChildItem -Path desktop-electron\dist-electron -Filter "*.exe" -Recurse | Where-Object { $_.Name -like "*Setup*" -or $_.Name -like "*Installer*" } | Select-Object -First 1
+          echo "Looking for installer files:"
+          Get-ChildItem -Path desktop-electron\dist-electron -Recurse -Filter "*.exe" | ForEach-Object { Write-Host "  $($_.FullName) ($($_.Length) bytes)" }
+          $EXE = Get-ChildItem -Path desktop-electron\dist-electron -Recurse -Filter "*.exe" | Select-Object -First 1
           if ($EXE) {
-            Write-Host "Uploading $($EXE.FullName)"
+            Write-Host "Uploading: $($EXE.Name)"
             gh release upload v1.0.5 $EXE.FullName --clobber --repo Lintshiwe/Supply-IQ
+            # Also delete old zip if present
+            gh release delete-asset v1.0.5 SupplyIQ-1.0.5-win.zip --yes --repo Lintshiwe/Supply-IQ 2>$null
           } else {
-            Write-Host "Looking for .exe files:"
-            Get-ChildItem -Path desktop-electron\dist-electron -Filter "*.exe" -Recurse | ForEach-Object { Write-Host $_.FullName }
-            # Try any .exe
-            $ANY = Get-ChildItem -Path desktop-electron\dist-electron -Filter "*.exe" -Recurse | Select-Object -First 1
-            if ($ANY) {
-              Write-Host "Uploading $($ANY.FullName)"
-              gh release upload v1.0.5 $ANY.FullName --clobber --repo Lintshiwe/Supply-IQ
-            }
+            Write-Host "No .exe found!"
+            exit 1
           }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
