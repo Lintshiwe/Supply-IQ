@@ -2,6 +2,11 @@
   "name": "supplyiq-application",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "backend",
+    "desktop"
+  ],
   "scripts": {
     "dev:app": "bun run --cwd backend dev",
     "dev:desktop": "bun run --cwd desktop tauri dev",
