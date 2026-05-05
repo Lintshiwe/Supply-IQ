@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output
+backend/dist/
+backend/dist-ssr/
+backend/.output/
+backend/.vinxi/
+backend/.tanstack/
+backend/.nitro/
+backend/.wrangler/
+backend/.dev.vars
+
+# Desktop build
+desktop/src-tauri/target/
+
+# Env files
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Drizzle
+backend/src/server/db/migrations/
+
+# Bun
+bun.lockb
+
+# OS
+Thumbs.db
