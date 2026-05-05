@@ -53,7 +53,13 @@ function AppLayout() {
   if (!isAuthenticated && !isDemo) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
+        <div className="text-center space-y-4">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground mx-auto" />
+          <p className="text-sm text-muted-foreground">Loading SupplyIQ...</p>
+          <a href="/" className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition-all">
+            Enter Demo
+          </a>
+        </div>
       </div>
     );
   }
