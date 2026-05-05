@@ -2,56 +2,137 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { join, extname, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { randomBytes, createHash } from "node:crypto";
 
 const PORT = process.env.PORT || 8080;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STATIC_DIR = join(__dirname, "dist", "client");
+const DATABASE_URL = process.env.DATABASE_URL;
 
 const MIME_TYPES = {
-  ".js": "text/javascript",
-  ".css": "text/css",
-  ".svg": "image/svg+xml",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".woff2": "font/woff2",
-  ".json": "application/json",
-  ".html": "text/html",
+  ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml",
+  ".png": "image/png", ".jpg": "image/jpeg", ".woff2": "font/woff2",
+  ".json": "application/json", ".html": "text/html",
 };
 
+// ─── Database ────────────────────────────────────────────
+let sql = null;
+let dbConnected = false;
+
+async function initDB() {
+  if (!DATABASE_URL) return false;
+  try {
+    const postgres = (await import("postgres")).default;
+    sql = postgres(DATABASE_URL, { max: 5, connect_timeout: 10 });
+    await sql`SELECT 1`;
+    dbConnected = true;
+    await ensureTables();
+    console.log("Database connected");
+    return true;
+  } catch (e) {
+    console.warn("Database not available:", e.message);
+    return false;
+  }
+}
+
+async function ensureTables() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS workspaces (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      owner_id UUID,
+      address TEXT, phone TEXT, industry TEXT,
+      is_demo BOOLEAN DEFAULT false,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS users (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      email TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'admin',
+      workspace_id UUID NOT NULL,
+      is_owner BOOLEAN DEFAULT false,
+      is_active BOOLEAN DEFAULT true,
+      last_login TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID UNIQUE NOT NULL,
+      tier TEXT NOT NULL DEFAULT 'demo',
+      status TEXT NOT NULL DEFAULT 'demo',
+      activation_key_hash TEXT,
+      starts_at TIMESTAMPTZ, expires_at TIMESTAMPTZ,
+      max_devices INT DEFAULT 1,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS activation_keys (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      key_hash TEXT UNIQUE NOT NULL,
+      tier TEXT NOT NULL,
+      is_used BOOLEAN DEFAULT false,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+}
+
+// ─── Auth Helpers ────────────────────────────────────────
+function hashPassword(pw) {
+  const salt = randomBytes(16).toString("hex");
+  const h = createHash("sha256").update(salt + pw).digest("hex");
+  return `${salt}:${h}`;
+}
+
+function verifyPassword(pw, stored) {
+  const [salt, h] = stored.split(":");
+  return createHash("sha256").update(salt + pw).digest("hex") === h;
+}
+
+const SESSIONS = new Map();
+function createSession(userId, workspaceId, role) {
+  const token = randomBytes(32).toString("hex");
+  SESSIONS.set(token, { userId, workspaceId, role, created: Date.now() });
+  return token;
+}
+
+// ─── Static Files ────────────────────────────────────────
 function serveStatic(url, res) {
   const filePath = join(STATIC_DIR, url);
   if (!existsSync(filePath)) return false;
-
-  const ext = extname(filePath);
-  const mime = MIME_TYPES[ext] || "application/octet-stream";
-
+  const mime = MIME_TYPES[extname(filePath)] || "application/octet-stream";
   try {
     const data = readFileSync(filePath);
     res.writeHead(200, { "Content-Type": mime, "Content-Length": data.length });
     res.end(data);
     return true;
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
+// ─── API Routes ──────────────────────────────────────────
 async function handleApiRoute(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
-  if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
+  if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
 
-  // Health check
   if (req.url === "/api/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ status: "healthy", version: "1.0.5" }));
+    return res.end(JSON.stringify({ status: "healthy", version: "1.0.5", db: dbConnected }));
   }
 
   // Parse body
@@ -61,115 +142,160 @@ async function handleApiRoute(req, res) {
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       body = JSON.parse(Buffer.concat(chunks).toString());
-    } catch (e) { /* ignore parse errors */ }
+    } catch {}
   }
 
   try {
-    let result;
-
+    // Register
     if (req.url === "/api/register" && req.method === "POST") {
-      result = { error: "Database not configured. Add DATABASE_URL on Render to enable registration.", dbRequired: true };
-    } else if (req.url === "/api/login" && req.method === "POST") {
-      result = { error: "Database not configured. Add DATABASE_URL on Render to enable login.", dbRequired: true };
-    } else if (req.url === "/api/logout" && req.method === "POST") {
-      result = { message: "Logged out" };
-    } else if (req.url === "/api/activate" && req.method === "POST") {
-      result = { error: "Database not configured.", dbRequired: true };
-    } else if (req.url === "/api/request-key" && req.method === "POST") {
-      result = { error: "Database not configured.", dbRequired: true };
-    } else if (req.url === "/api/cancel" && req.method === "POST") {
-      result = { message: "Cancelled" };
-    } else {
-      res.writeHead(404, { "Content-Type": "application/json" });
-      return res.end(JSON.stringify({ error: "Unknown endpoint" }));
+      if (!dbConnected) return json(res, 503, { error: "Database not connected" });
+      const { email, name, password, companyName } = body;
+      if (!email || !password || !name) return json(res, 400, { error: "Missing fields" });
+
+      const norm = email.toLowerCase();
+      const [existing] = await sql`SELECT id FROM users WHERE email = ${norm}`;
+      if (existing) return json(res, 400, { error: "Account already exists" });
+
+      const slug = (companyName || name).toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString(36);
+      const [ws] = await sql`INSERT INTO workspaces (name, slug) VALUES (${companyName || name}, ${slug}) RETURNING id`;
+      const [user] = await sql`INSERT INTO users (email, name, password_hash, role, workspace_id, is_owner)
+        VALUES (${norm}, ${name}, ${hashPassword(password)}, 'admin', ${ws.id}, true) RETURNING id, email, name, role, workspace_id`;
+
+      const now = new Date();
+      const trialEnds = new Date(now.getTime() + 14 * 86400000);
+      await sql`UPDATE workspaces SET owner_id = ${user.id} WHERE id = ${ws.id}`;
+      await sql`INSERT INTO subscriptions (workspace_id, tier, status, starts_at, expires_at, max_devices)
+        VALUES (${ws.id}, 'demo', 'demo', ${now.toISOString()}, ${trialEnds.toISOString()}, 1)`;
+
+      const token = createSession(user.id, ws.id, user.role);
+      return json(res, 200, {
+        user: { id: user.id, email: user.email, name: user.name, role: user.role },
+        workspace: { id: ws.id, name: companyName || name },
+        subscription: { tier: "demo", status: "demo", isActive: false, isDemo: true, isExpired: false, expiresAt: trialEnds.toISOString() },
+        sessionCookie: `session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800`,
+      });
     }
 
-    res.writeHead(result.error ? 400 : 200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(result));
+    // Login
+    if (req.url === "/api/login" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "Database not connected" });
+      const { email, password } = body;
+      const [user] = await sql`SELECT * FROM users WHERE email = ${email.toLowerCase()}`;
+      if (!user || !verifyPassword(password, user.password_hash)) {
+        return json(res, 401, { error: "Invalid email or password" });
+      }
+      await sql`UPDATE users SET last_login = now() WHERE id = ${user.id}`;
+      const [ws] = await sql`SELECT * FROM workspaces WHERE id = ${user.workspace_id}`;
+      const [sub] = await sql`SELECT * FROM subscriptions WHERE workspace_id = ${user.workspace_id}`;
+      const token = createSession(user.id, user.workspace_id, user.role);
+
+      return json(res, 200, {
+        user: { id: user.id, email: user.email, name: user.name, role: user.role },
+        workspace: ws ? { id: ws.id, name: ws.name } : null,
+        subscription: sub ? {
+          tier: sub.tier, status: sub.status,
+          isActive: sub.status === "active" && new Date(sub.expires_at) > new Date(),
+          isDemo: sub.tier === "demo", isExpired: new Date(sub.expires_at) < new Date(),
+          expiresAt: sub.expires_at?.toISOString(),
+        } : null,
+        sessionCookie: `session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800`,
+      });
+    }
+
+    // Activate
+    if (req.url === "/api/activate" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "Database not connected" });
+      const { activationKey, workspaceId } = body;
+      const keyHash = createHash("sha256").update(activationKey).digest("hex");
+      const [key] = await sql`SELECT * FROM activation_keys WHERE key_hash = ${keyHash} AND workspace_id = ${workspaceId} AND is_used = false`;
+      if (!key) return json(res, 400, { error: "Invalid activation key" });
+      if (new Date(key.expires_at) < new Date()) return json(res, 400, { error: "Key expired" });
+
+      const durations = { "1yr": 365, "3yr": 1095, "5yr": 1825, "7yr": 2555 };
+      const days = durations[key.tier] || 365;
+      const now = new Date();
+      const exp = new Date(now.getTime() + days * 86400000);
+
+      await sql`UPDATE activation_keys SET is_used = true WHERE id = ${key.id}`;
+      await sql`UPDATE subscriptions SET tier = ${key.tier}, status = 'active', starts_at = ${now.toISOString()}, expires_at = ${exp.toISOString()}, max_devices = ${[1,2,5,10,20][["demo","1yr","3yr","5yr","7yr"].indexOf(key.tier)] || 1} WHERE workspace_id = ${workspaceId}`;
+      await sql`UPDATE workspaces SET is_demo = false WHERE id = ${workspaceId}`;
+      return json(res, 200, { tier: key.tier, status: "active", isActive: true, isDemo: false, isExpired: false, expiresAt: exp.toISOString() });
+    }
+
+    // Request activation key
+    if (req.url === "/api/request-key" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "Database not connected" });
+      const { workspaceId, tier } = body;
+      const rawKey = "SW-" + Array.from({ length: 5 }, () => randomBytes(2).toString("hex").toUpperCase()).join("-");
+      const keyHash = createHash("sha256").update(rawKey).digest("hex");
+      const exp = new Date(Date.now() + 30 * 86400000);
+      await sql`INSERT INTO activation_keys (workspace_id, key_hash, tier, is_used, expires_at) VALUES (${workspaceId}, ${keyHash}, ${tier}, false, ${exp.toISOString()})`;
+      return json(res, 200, { activationKey: rawKey, tier, maxDevices: { "1yr": 2, "3yr": 5, "5yr": 10, "7yr": 20 }[tier] || 2 });
+    }
+
+    // Devices
+    if (req.url === "/api/request-key" && req.method === "GET") {
+      return json(res, 200, { devices: [], maxDevices: 1 });
+    }
+
+    return json(res, 404, { error: "Unknown endpoint" });
   } catch (e) {
-    res.writeHead(500, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Internal error" }));
+    console.error("API error:", e.message);
+    return json(res, 500, { error: "Internal server error" });
   }
 }
 
+function json(res, status, data) {
+  res.writeHead(status, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(data));
+}
+
+// ─── Server Start ────────────────────────────────────────
 async function start() {
+  await initDB();
+
   try {
     const mod = await import("./dist/server/index.js");
-
-    // TanStack Start exports: { createServerEntry: fn, default: { fetch: fn } }
     const workerEntry = mod.default;
     const handler = workerEntry?.fetch || mod.createServerEntry;
-
-    if (!handler || typeof handler !== "function") {
-      throw new Error("No valid handler found in build output");
-    }
+    if (!handler || typeof handler !== "function") throw new Error("No handler");
 
     const server = createServer(async (req, res) => {
-      // Health check
-      if (req.url === "/api/health") {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({ status: "healthy", version: "1.0.5" }));
-      }
-
-      // Serve static assets (JS, CSS, images, fonts)
+      if (req.url?.startsWith("/api/")) return handleApiRoute(req, res);
       if (req.url && /\.(js|css|svg|png|jpg|woff2|json|ico)$/.test(req.url)) {
         if (serveStatic(req.url, res)) return;
       }
 
-      // Handle API requests
-      if (req.url?.startsWith("/api/")) {
-        await handleApiRoute(req, res);
-        return;
-      }
-
-      // All other requests → SSR handler
       try {
         const url = `https://${req.headers.host || "localhost"}${req.url}`;
         const headers = new Headers();
         for (const [k, v] of Object.entries(req.headers)) {
           if (v) headers.set(k, Array.isArray(v) ? v.join(", ") : v);
         }
-
-        const body = req.method !== "GET" && req.method !== "HEAD"
-          ? await new Promise((resolve) => {
-              const chunks = [];
-              req.on("data", (c) => chunks.push(c));
-              req.on("end", () => resolve(Buffer.concat(chunks)));
-            })
+        const bodyData = req.method !== "GET" && req.method !== "HEAD"
+          ? await new Promise((r) => { const c = []; req.on("data", (d) => c.push(d)); req.on("end", () => r(Buffer.concat(c))); })
           : undefined;
-
-        const webReq = new Request(url, { method: req.method, headers, body });
+        const webReq = new Request(url, { method: req.method, headers, body: bodyData });
         const response = await handler(webReq);
-
         const resHeaders = {};
         response.headers?.forEach((v, k) => { resHeaders[k] = v; });
         res.writeHead(response.status || 200, resHeaders);
-
         if (response.body) {
           const reader = response.body.getReader();
-          for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            res.write(value);
-          }
+          for (;;) { const { done, value } = await reader.read(); if (done) break; res.write(value); }
         }
         res.end();
       } catch (e) {
-        console.error("Request error:", e.message);
         res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Internal Server Error" }));
+        res.end(JSON.stringify({ error: "Server error" }));
       }
     });
 
-    server.listen(PORT, () => console.log(`SupplyIQ running on http://localhost:${PORT}`));
+    server.listen(PORT, () => console.log(`SupplyIQ on port ${PORT}${dbConnected ? " (DB connected)" : ""}`));
   } catch (e) {
-    console.error("Startup error:", e.message);
-    // Fallback server
-    const s = createServer((_, res) => {
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(`<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh"><div style="text-align:center"><h1 style="color:#84cc16">SupplyIQ</h1><p>API Running — Full site coming soon</p></div></body></html>`);
-    });
-    s.listen(PORT, () => console.log(`Fallback on ${PORT}`));
+    console.error("Start error:", e.message);
+    const s = createServer((_, r) => { r.writeHead(200); r.end("SupplyIQ API Running"); });
+    s.listen(PORT);
   }
 }
 
