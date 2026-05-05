@@ -131,5 +131,11 @@ async function routeApiRequest(
     });
   }
 
+  // Health check
+  if (path === "/api/health" && method === "GET") {
+    const { handleHealthCheck } = await import("./health");
+    return handleHealthCheck();
+  }
+
   throw new Error(`Unknown API endpoint: ${method} ${path}`);
 }

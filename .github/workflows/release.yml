@@ -1,0 +1,105 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build backend
+        run: bun run --cwd backend build
+
+      - name: Package backend
+        run: |
+          cd backend
+          tar -czf ../supplyiq-backend.tar.gz dist/ package.json wrangler.jsonc
+          cd ..
+          zip -r supplyiq-backend.zip backend/dist/ backend/package.json backend/wrangler.jsonc
+
+      - name: Upload backend artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: supplyiq-backend
+          path: |
+            supplyiq-backend.tar.gz
+            supplyiq-backend.zip
+
+  build-landing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: Lintshiwe/Supply-IQ-Landing-Page
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build landing
+        run: bun run build
+
+      - name: Package landing
+        run: |
+          tar -czf supplyiq-landing.tar.gz dist/
+          zip -r supplyiq-landing.zip dist/
+
+      - name: Upload landing artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: supplyiq-landing
+          path: |
+            supplyiq-landing.tar.gz
+            supplyiq-landing.zip
+
+  release:
+    needs: [build-backend, build-landing]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: supplyiq-backend
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: supplyiq-landing
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "SupplyIQ ${{ github.ref_name }}"
+          body: |
+            ## SupplyIQ ${{ github.ref_name }}
+
+            ### Backend
+            - `supplyiq-backend.tar.gz` — Server deployment package
+            - `supplyiq-backend.zip` — Server deployment package
+
+            ### Landing
+            - `supplyiq-landing.tar.gz` — Static site files
+            - `supplyiq-landing.zip` — Static site files
+
+            ### Deploy
+            See [DEPLOY.md](DEPLOY.md) for deployment instructions.
+          files: |
+            supplyiq-backend.tar.gz
+            supplyiq-backend.zip
+            supplyiq-landing.tar.gz
+            supplyiq-landing.zip
+          generate_release_notes: true
