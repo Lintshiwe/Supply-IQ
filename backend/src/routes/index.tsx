@@ -359,7 +359,7 @@ function LandingPage() {
             team aligned from one powerful command center.
           </p>
 
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               type="button"
               onClick={handleTryDemo}
@@ -367,6 +367,13 @@ function LandingPage() {
             >
               Try demo
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate({ to: "/app/dashboard" })}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-semibold hover:bg-muted transition-all"
+            >
+              Activate License
             </button>
           </div>
         </div>
