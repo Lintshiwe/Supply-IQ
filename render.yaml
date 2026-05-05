@@ -1,11 +1,10 @@
 services:
   - type: web
     name: supplyiq-api
-    env: node
+    runtime: docker
     region: frankfurt
-    buildCommand: cd backend && bun install && bun run build
-    startCommand: cd backend && node server.js
     plan: free
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DATABASE_URL
         sync: false
