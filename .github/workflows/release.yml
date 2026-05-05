@@ -51,8 +51,10 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Generate icons
-        run: cd desktop\src-tauri && python generate_icons.py
+      - name: Generate icons (Windows)
+        run: |
+          cd desktop\src-tauri
+          python generate_icons.py || python3 generate_icons.py
 
       - name: Build Tauri MSI
         run: cd desktop && bunx tauri build --bundles msi

@@ -10,11 +10,9 @@
   },
   "app": {
     "withGlobalTauri": true,
-    "title": "SupplyIQ — Inventory Command Center",
     "windows": [
       {
-        "title": "SupplyIQ",
-        "label": "main",
+        "title": "SupplyIQ — Inventory Command Center",
         "width": 1280,
         "height": 800,
         "minWidth": 1024,
