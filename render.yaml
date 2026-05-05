@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: supplyiq-api
+    env: node
+    region: frankfurt
+    buildCommand: cd backend && bun install && bun run build
+    startCommand: cd backend && node server.js
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: sladethedeciever@gmail.com
+      - key: SMTP_PASS
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /api/health
+
+databases:
+  - name: supplyiq-db
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: 16
