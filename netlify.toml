@@ -1,0 +1,12 @@
+[build]
+  base = "backend"
+  command = "bun install && bun run build"
+  publish = "dist/client"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
