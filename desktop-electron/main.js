@@ -1,8 +1,8 @@
 const { app, BrowserWindow, Menu } = require("electron");
 const path = require("path");
 
-const isDev = !app.isPackaged;
-const APP_URL = isDev ? "http://localhost:8080" : "https://app.supplyiq.co.za";
+// Use localhost by default, override with SUPPLYIQ_URL env var
+const APP_URL = process.env.SUPPLYIQ_URL || "http://localhost:8080";
 
 // Set app name for Windows taskbar / macOS dock
 app.setName("SupplyIQ");
@@ -32,10 +32,8 @@ function createWindow() {
     mainWindow.show();
   });
 
-  // Remove menu bar in production
-  if (!isDev) {
-    Menu.setApplicationMenu(null);
-  }
+  // Remove menu bar
+  Menu.setApplicationMenu(null);
 
   mainWindow.loadURL(APP_URL + "/app/dashboard");
 
