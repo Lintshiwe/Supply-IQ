@@ -9,6 +9,18 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
   const path = url.pathname;
   const method = req.method?.toUpperCase() || "GET";
 
+  // CORS headers — allow requests from landing site and any origin in dev
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+
   if (!path.startsWith("/api/")) return false;
 
   // Parse JSON body for POST/PUT requests

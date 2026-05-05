@@ -1,7 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
+  "name": "supplyiq-api",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry"
+  "main": "@tanstack/react-start/server-entry",
+  "vars": {
+    "APP_URL": "https://api.supplyiq.co.za",
+    "LANDING_URL": "https://supplyiq.co.za"
+  },
+  "routes": [
+    {
+      "pattern": "api.supplyiq.co.za/*",
+      "custom_domain": true
+    }
+  ]
 }

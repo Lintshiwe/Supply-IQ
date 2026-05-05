@@ -20,30 +20,43 @@ packages/shared/  # Shared utilities
 
 ## Features
 
-- Real-time inventory tracking
-- Multi-warehouse management
+- Real-time inventory tracking across multiple warehouses
 - Supplier management with performance scoring
 - Purchase orders, stock movements, inventory requests
 - AI-powered reorder suggestions & anomaly detection
 - Barcode scanning, CSV import/export
 - Role-based access (Admin, Manager, Requestor)
-- Guided onboarding tour
-- Analytics dashboard with charts
+- Device-based licensing (2/5/10/20 devices per tier)
+- Activation key system with file download
+- Guided onboarding tour & analytics dashboard
 
 ## Database
 
-PostgreSQL with Drizzle ORM — 11 tables: workspaces, users, categories, items, suppliers, locations, movements, purchase_orders, requests, notifications, subscriptions.
+PostgreSQL with Drizzle ORM — 12 tables: workspaces, users, categories, items, suppliers, locations, movements, purchase_orders, requests, notifications, subscriptions, devices.
 
 ## Pricing (ZAR)
 
-| Plan | Price/month |
-|---|---|
-| Free Trial | R0 (14 days) |
-| 1 Year | R499 |
-| 3 Year | R399 |
-| 5 Year | R299 |
-| 7 Year | R199 |
+| Plan | Price/month | Devices |
+|---|---|---|
+| Free Trial | R0 | 1 |
+| 1 Year | R499 | 2 |
+| 3 Year | R399 | 5 |
+| 5 Year | R299 | 10 |
+| 7 Year | R199 | 20 |
+
+## Deploy
+
+See [DEPLOY.md](DEPLOY.md) for production deployment to Cloudflare Workers + Pages.
+
+```bash
+# Backend → Cloudflare Workers
+bun run build:app
+bunx wrangler deploy backend/dist/server/worker-entry.js
+
+# Landing → Cloudflare Pages / Vercel / Netlify
+cd ../landing && bun run build
+```
 
 ## Related
 
-**SupplyIQ Landing**: Marketing site at [github.com/YOUR_USERNAME/SupplyIQ-landing](https://github.com/YOUR_USERNAME/SupplyIQ-landing)
+**SupplyIQ Landing**: Marketing site at [github.com/Lintshiwe/Supply-IQ-Landing-Page](https://github.com/Lintshiwe/Supply-IQ-Landing-Page)
