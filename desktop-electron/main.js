@@ -5,9 +5,11 @@ const path = require("path");
 const APP_URL = process.env.SUPPLYIQ_URL || "http://localhost:8082";
 
 // Set app name for Windows taskbar / macOS dock
-// Disable sandbox for localhost connections
+// Disable sandbox + GPU for localhost dev
 app.commandLine.appendSwitch("no-sandbox");
 app.commandLine.appendSwitch("disable-gpu-sandbox");
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("in-process-gpu");
 app.setName("SupplyIQ");
 
 let mainWindow;
