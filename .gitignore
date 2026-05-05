@@ -38,3 +38,5 @@ bun.lockb
 # OS
 Thumbs.db
 supplyiq-*.tar.gz
+dist-electron/
+desktop-electron/dist-electron/
