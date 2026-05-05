@@ -22,8 +22,10 @@
       "assets/**"
     ],
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
+      "target": ["nsis", "portable"],
+      "icon": "assets/icon.ico",
+      "sign": null,
+      "signAndEditExecutable": false
     },
     "mac": {
       "target": "dmg",

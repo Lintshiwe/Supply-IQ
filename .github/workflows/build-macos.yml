@@ -1,0 +1,44 @@
+name: Build macOS Desktop App
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'desktop-electron/**'
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+
+      - name: Install dependencies
+        working-directory: desktop-electron
+        run: bun install
+
+      - name: Generate icons
+        working-directory: desktop-electron
+        run: python3 generate_icons.py
+
+      - name: Build macOS DMG
+        working-directory: desktop-electron
+        run: npx electron-builder --mac dmg --arm64 --x64 --publish never
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: supplyiq-macos
+          path: desktop-electron/dist-electron/*.dmg
+
+      - name: Upload to Release
+        if: github.ref == 'refs/heads/main'
+        run: |
+          DMG=$(ls desktop-electron/dist-electron/*.dmg | head -1)
+          if [ -n "$DMG" ]; then
+            gh release upload v1.0.5 "$DMG" --clobber
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
