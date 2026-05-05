@@ -1,0 +1,51 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'desktop-electron/**'
+      - '.github/workflows/build-windows.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+
+      - name: Install dependencies
+        working-directory: desktop-electron
+        run: bun install
+
+      - name: Generate icons
+        working-directory: desktop-electron
+        run: python generate_icons.py
+
+      - name: Build Windows NSIS installer
+        working-directory: desktop-electron
+        run: npx electron-builder --win nsis --x64 --publish never
+
+      - name: Upload installer to Release
+        run: |
+          $EXE = Get-ChildItem -Path desktop-electron\dist-electron -Filter "*.exe" -Recurse | Where-Object { $_.Name -like "*Setup*" -or $_.Name -like "*Installer*" } | Select-Object -First 1
+          if ($EXE) {
+            Write-Host "Uploading $($EXE.FullName)"
+            gh release upload v1.0.5 $EXE.FullName --clobber --repo Lintshiwe/Supply-IQ
+          } else {
+            Write-Host "Looking for .exe files:"
+            Get-ChildItem -Path desktop-electron\dist-electron -Filter "*.exe" -Recurse | ForEach-Object { Write-Host $_.FullName }
+            # Try any .exe
+            $ANY = Get-ChildItem -Path desktop-electron\dist-electron -Filter "*.exe" -Recurse | Select-Object -First 1
+            if ($ANY) {
+              Write-Host "Uploading $($ANY.FullName)"
+              gh release upload v1.0.5 $ANY.FullName --clobber --repo Lintshiwe/Supply-IQ
+            }
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
