@@ -46,7 +46,7 @@ function AppLayout() {
   // Subscription check — redirect to subscribe if expired and not demo
   useEffect(() => {
     if (isAuthenticated && !isDemo && subscription?.isExpired) {
-      window.open("http://localhost:5173/subscribe", "_self");
+      window.location.href = "/subscribe";
     }
   }, [isAuthenticated, isDemo, subscription?.isExpired]);
 

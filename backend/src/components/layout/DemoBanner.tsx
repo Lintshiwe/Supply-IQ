@@ -41,7 +41,7 @@ export function DemoBanner() {
           </span>
           <button
             type="button"
-            onClick={() => window.open("http://localhost:5173/subscribe", "_self")}
+            onClick={() => window.open("https://supplyiq.netlify.app/subscribe", "_self")}
             className="inline-flex items-center gap-1 rounded-md border border-accent-foreground/25 bg-accent-foreground/10 px-2 py-0.5 text-xs font-semibold transition-colors hover:bg-accent-foreground/20"
           >
             Subscribe Now
