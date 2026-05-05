@@ -4,7 +4,7 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: cd backend && npm install --legacy-peer-deps
+    buildCommand: cd backend && bun install
     startCommand: cd backend && NODE_OPTIONS="--no-deprecation" npx vite dev --port $PORT --host 0.0.0.0
     envVars:
       - key: DATABASE_URL
