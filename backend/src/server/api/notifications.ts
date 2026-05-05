@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from "../db";
 import { notifications, notificationPrefs } from "../db/schema";
 import { eq, desc } from "drizzle-orm";

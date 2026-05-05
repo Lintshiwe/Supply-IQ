@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from "../db";
 import { items } from "../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, HelpCircle } from "lucide-react";
+import { Search, HelpCircle, BookOpen, Play, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Accordion,
@@ -8,7 +8,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { FAQ_DATA } from "@/lib/faq-data";
+import { TUTORIALS } from "@/lib/tutorials";
 
 export const Route = createFileRoute("/app/help")({
   component: HelpPage,
@@ -17,6 +19,7 @@ export const Route = createFileRoute("/app/help")({
 
 function HelpPage() {
   const [search, setSearch] = useState("");
+  const onboarding = useOnboarding("help");
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -41,6 +44,36 @@ function HelpPage() {
         </div>
       </div>
 
+      {/* Guided Tutorials */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-accent" />
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Guided Tutorials</h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {TUTORIALS.map((tutorial) => (
+            <button
+              key={tutorial.id}
+              onClick={() => {
+                onboarding.resetTour();
+                window.location.href = tutorial.route;
+              }}
+              className="flex items-start gap-3 rounded-lg border border-border bg-card p-4 text-left hover:border-accent/40 hover:shadow-sm transition-all"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 shrink-0">
+                <Play className="h-4 w-4 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{tutorial.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{tutorial.description}</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* FAQ Search */}
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input

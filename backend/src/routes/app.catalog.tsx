@@ -223,7 +223,7 @@ function CatalogPage() {
           <h1 className="text-2xl font-semibold text-foreground">Product Catalog</h1>
           <p className="text-sm text-muted-foreground">{items.length} items</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-tour="catalog-actions">
           <CSVExportButton
             data={items}
             columns={csvColumns}
@@ -242,7 +242,7 @@ function CatalogPage() {
         </div>
       </div>
 
-      <Card className="p-4">
+      <Card className="p-4" data-tour="catalog-filters">
         <CatalogFilters filters={filters} onChange={setFilters} categories={categories} suppliers={suppliers} locations={locations} />
       </Card>
 

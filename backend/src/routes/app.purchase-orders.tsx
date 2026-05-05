@@ -114,14 +114,16 @@ function PurchaseOrdersPage() {
           <p className="text-sm text-muted-foreground">{filtered.length} orders</p>
         </div>
         {canManagePOs && (
+          <div data-tour="po-actions">
           <Button size="sm" onClick={openCreate}>
             <Plus className="mr-1.5 h-4 w-4" />
             New PO
           </Button>
+          </div>
         )}
       </div>
 
-      <POSummaryStats purchaseOrders={filtered} />
+      <div data-tour="po-stats"><POSummaryStats purchaseOrders={filtered} /></div>
 
       <PurchaseOrdersFilters filters={filters} onChange={setFilters} suppliers={suppliers} />
 

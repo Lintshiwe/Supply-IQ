@@ -1,4 +1,4 @@
-name: Build and Release
+name: Build and Release SupplyIQ Desktop
 
 on:
   push:
@@ -7,14 +7,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-backend:
+  # ─── Linux AppImage ─────────────────────────────────────
+  build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+        with: { bun-version: latest }
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libgtk-3-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -22,84 +30,125 @@ jobs:
       - name: Build backend
         run: bun run --cwd backend build
 
-      - name: Package backend
+      - name: Build AppImage
         run: |
-          cd backend
-          tar -czf ../supplyiq-backend.tar.gz dist/ package.json wrangler.jsonc
+          cd desktop
+          bunx tauri build --bundles appimage
           cd ..
-          zip -r supplyiq-backend.zip backend/dist/ backend/package.json backend/wrangler.jsonc
 
-      - name: Upload backend artifacts
+      - name: Upload AppImage
         uses: actions/upload-artifact@v4
         with:
-          name: supplyiq-backend
-          path: |
-            supplyiq-backend.tar.gz
-            supplyiq-backend.zip
+          name: supplyiq-linux
+          path: desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+          if-no-files-found: warn
 
-  build-landing:
-    runs-on: ubuntu-latest
+  # ─── Windows .exe ───────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          repository: Lintshiwe/Supply-IQ-Landing-Page
 
       - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+        with: { bun-version: latest }
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build landing
-        run: bun run build
+      - name: Build backend
+        run: bun run --cwd backend build
 
-      - name: Package landing
+      - name: Build Windows installer
         run: |
-          tar -czf supplyiq-landing.tar.gz dist/
-          zip -r supplyiq-landing.zip dist/
+          cd desktop
+          bunx tauri build --bundles msi
+          cd ..
 
-      - name: Upload landing artifacts
+      - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: supplyiq-landing
-          path: |
-            supplyiq-landing.tar.gz
-            supplyiq-landing.zip
+          name: supplyiq-windows
+          path: desktop/src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: warn
 
+  # ─── macOS .dmg ─────────────────────────────────────────
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build backend
+        run: bun run --cwd backend build
+
+      - name: Build macOS DMG
+        run: |
+          cd desktop
+          bunx tauri build --bundles dmg
+          cd ..
+
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: supplyiq-macos
+          path: desktop/src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: warn
+
+  # ─── Create Release ─────────────────────────────────────
   release:
-    needs: [build-backend, build-landing]
+    needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/download-artifact@v4
-        with:
-          name: supplyiq-backend
-
+        with: { name: supplyiq-linux, path: ./linux }
+      
       - uses: actions/download-artifact@v4
-        with:
-          name: supplyiq-landing
+        with: { name: supplyiq-windows, path: ./windows }
+      
+      - uses: actions/download-artifact@v4
+        with: { name: supplyiq-macos, path: ./macos }
+
+      - name: Rename artifacts
+        run: |
+          mkdir -p release
+          find ./linux -name "*.AppImage" -exec cp {} ./release/SupplyIQ-linux-x86_64.AppImage \;
+          find ./windows -name "*.msi" -exec cp {} ./release/SupplyIQ-windows-x86_64.msi \;
+          find ./macos -name "*.dmg" -exec cp {} ./release/SupplyIQ-macos-arm64.dmg \;
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "SupplyIQ ${{ github.ref_name }}"
+          name: "SupplyIQ Desktop ${{ github.ref_name }}"
           body: |
-            ## SupplyIQ ${{ github.ref_name }}
+            ## SupplyIQ Desktop ${{ github.ref_name }}
 
-            ### Backend
-            - `supplyiq-backend.tar.gz` — Server deployment package
-            - `supplyiq-backend.zip` — Server deployment package
+            ### Download
+            | Platform | File |
+            |---|---|
+            | Windows | `SupplyIQ-windows-x86_64.msi` |
+            | macOS | `SupplyIQ-macos-arm64.dmg` |
+            | Linux | `SupplyIQ-linux-x86_64.AppImage` |
 
-            ### Landing
-            - `supplyiq-landing.tar.gz` — Static site files
-            - `supplyiq-landing.zip` — Static site files
+            ### Install
+            - **Windows**: Double-click the `.msi` installer
+            - **macOS**: Open the `.dmg` and drag to Applications
+            - **Linux**: `chmod +x SupplyIQ-linux-x86_64.AppImage && ./SupplyIQ-linux-x86_64.AppImage`
 
-            ### Deploy
-            See [DEPLOY.md](DEPLOY.md) for deployment instructions.
-          files: |
-            supplyiq-backend.tar.gz
-            supplyiq-backend.zip
-            supplyiq-landing.tar.gz
-            supplyiq-landing.zip
+            ### System Requirements
+            - Windows 10/11 (64-bit)
+            - macOS 12+ (Apple Silicon & Intel)
+            - Ubuntu 22.04+ (or equivalent)
+          files: release/**
           generate_release_notes: true

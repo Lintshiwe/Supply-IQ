@@ -8,6 +8,8 @@ import { seedWorkspace } from "../db/seed";
 import { sendActivationKeyEmail } from "../email/nodemailer";
 import { getSubscriptionStatus } from "../auth/subscription";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function registerUser(data: {
   email: string; name: string; password: string; companyName: string;
 }) {

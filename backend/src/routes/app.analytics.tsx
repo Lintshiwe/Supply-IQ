@@ -108,13 +108,15 @@ function AnalyticsPage() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
+        <div data-tour="analytics-tabs">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="stock">Stock Overview</TabsTrigger>
           <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
         </TabsList>
+        </div>
 
         <div className="mt-4">
-          <AnalyticsFilters filters={filters} onChange={setFilters} categories={categories} suppliers={suppliers} locations={locations} />
+          <div data-tour="analytics-filters"><AnalyticsFilters filters={filters} onChange={setFilters} categories={categories} suppliers={suppliers} locations={locations} /></div>
         </div>
 
         <TabsContent value="stock" className="space-y-6 mt-4">

@@ -114,6 +114,7 @@ function MovementsPage() {
       />
 
       <MovementStats movements={filtered} />
+      <div data-tour="movement-stats"></div>
 
       <ErrorBoundary>
       {movements.length === 0 ? (

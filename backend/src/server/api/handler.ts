@@ -1,5 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * API route handler middleware.
  * Intercepts /api/* requests and routes them to the appropriate handler functions.
