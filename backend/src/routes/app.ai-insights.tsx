@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Sparkles, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -127,10 +127,9 @@ function AiInsightsPage() {
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Sparkles className="h-5 w-5 text-primary" />
-        <h1 className="text-2xl font-semibold text-foreground">AI insights</h1>
-        <Badge variant="secondary" className="text-xs">Beta</Badge>
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">AI Insights</h1>
+        <p className="text-sm text-muted-foreground">Reorder forecasts and anomaly detection</p>
       </div>
 
       {/* Summary Metrics */}

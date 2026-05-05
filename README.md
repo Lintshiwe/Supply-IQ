@@ -1,4 +1,8 @@
-# SupplyIQ Application
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Lintshiwe/Supply-IQ/main/backend/public/logo.svg" alt="SupplyIQ" width="260" />
+</p>
+
+# SupplyIQ
 
 > Multi-warehouse Inventory Management System — Backend + Desktop App
 
@@ -14,7 +18,7 @@ bun run dev:app        # http://localhost:8080
 
 ```
 backend/          # TanStack Start full-stack app (React 19 + PostgreSQL)
-desktop/          # Tauri desktop wrapper (Win/Mac/Linux)
+desktop/          # Tauri desktop wrapper (Win/Mac/Linux) + Electron builds
 packages/shared/  # Shared utilities
 ```
 
@@ -27,12 +31,8 @@ packages/shared/  # Shared utilities
 - Barcode scanning, CSV import/export
 - Role-based access (Admin, Manager, Requestor)
 - Device-based licensing (2/5/10/20 devices per tier)
-- Activation key system with file download
+- Activation key system with email delivery
 - Guided onboarding tour & analytics dashboard
-
-## Database
-
-PostgreSQL with Drizzle ORM — 12 tables: workspaces, users, categories, items, suppliers, locations, movements, purchase_orders, requests, notifications, subscriptions, devices.
 
 ## Pricing (ZAR)
 
@@ -46,17 +46,12 @@ PostgreSQL with Drizzle ORM — 12 tables: workspaces, users, categories, items,
 
 ## Deploy
 
-See [DEPLOY.md](DEPLOY.md) for production deployment to Cloudflare Workers + Pages.
+See [DEPLOY.md](DEPLOY.md) for production deployment.
 
-```bash
-# Backend → Cloudflare Workers
-bun run build:app
-bunx wrangler deploy backend/dist/server/worker-entry.js
+## Download
 
-# Landing → Cloudflare Pages / Vercel / Netlify
-cd ../landing && bun run build
-```
+Get the latest release at [github.com/Lintshiwe/Supply-IQ/releases](https://github.com/Lintshiwe/Supply-IQ/releases)
 
 ## Related
 
-**SupplyIQ Landing**: Marketing site at [github.com/Lintshiwe/Supply-IQ-Landing-Page](https://github.com/Lintshiwe/Supply-IQ-Landing-Page)
+**SupplyIQ Landing**: [github.com/Lintshiwe/Supply-IQ-Landing-Page](https://github.com/Lintshiwe/Supply-IQ-Landing-Page)

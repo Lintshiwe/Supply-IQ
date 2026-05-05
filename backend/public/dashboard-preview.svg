@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" width="900" height="500">
+  <!-- Background -->
+  <rect width="900" height="500" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <!-- Header -->
+  <rect x="0" y="0" width="900" height="48" rx="8" fill="#0f172a"/>
+  <text x="24" y="30" font-family="sans-serif" font-size="14" font-weight="600" fill="#e2e8f0">Supply</text>
+  <text x="72" y="30" font-family="sans-serif" font-size="14" font-weight="600" fill="#84cc16">IQ</text>
+  <circle cx="854" cy="24" r="14" fill="#1e293b"/>
+  <text x="854" y="29" font-family="sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">D</text>
+  <!-- Metric Cards -->
+  <g transform="translate(16, 64)">
+    <rect x="0" y="0" width="208" height="80" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="16" y="24" font-family="sans-serif" font-size="11" fill="#64748b">Total SKUs</text>
+    <text x="16" y="54" font-family="monospace" font-size="24" font-weight="700" fill="#0f172a">256</text>
+    <circle cx="178" cy="40" r="16" fill="#0f172a"/>
+    <text x="178" y="45" font-family="sans-serif" font-size="12" fill="#fff" text-anchor="middle">P</text>
+  </g>
+  <g transform="translate(236, 64)">
+    <rect x="0" y="0" width="208" height="80" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="16" y="24" font-family="sans-serif" font-size="11" fill="#64748b">In Stock</text>
+    <text x="16" y="54" font-family="monospace" font-size="24" font-weight="700" fill="#22c55e">189</text>
+    <circle cx="178" cy="40" r="16" fill="#dcfce7"/>
+    <text x="178" y="45" font-family="sans-serif" font-size="12" fill="#22c55e" text-anchor="middle">✓</text>
+  </g>
+  <g transform="translate(456, 64)">
+    <rect x="0" y="0" width="208" height="80" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="16" y="24" font-family="sans-serif" font-size="11" fill="#64748b">Low Stock</text>
+    <text x="16" y="54" font-family="monospace" font-size="24" font-weight="700" fill="#eab308">12</text>
+    <circle cx="178" cy="40" r="16" fill="#fef9c3"/>
+    <text x="178" y="45" font-family="sans-serif" font-size="12" fill="#eab308" text-anchor="middle">!</text>
+  </g>
+  <g transform="translate(676, 64)">
+    <rect x="0" y="0" width="208" height="80" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="16" y="24" font-family="sans-serif" font-size="11" fill="#64748b">Out of Stock</text>
+    <text x="16" y="54" font-family="monospace" font-size="24" font-weight="700" fill="#ef4444">5</text>
+    <circle cx="178" cy="40" r="16" fill="#fee2e2"/>
+    <text x="178" y="45" font-family="sans-serif" font-size="12" fill="#ef4444" text-anchor="middle">✕</text>
+  </g>
+  <!-- Graph Area -->
+  <g transform="translate(16, 160)">
+    <rect x="0" y="0" width="560" height="240" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="16" y="24" font-family="sans-serif" font-size="12" font-weight="600" fill="#0f172a">Stock Levels Over Time</text>
+    <!-- Chart bars -->
+    <rect x="60" y="150" width="28" height="60" rx="2" fill="#84cc16" opacity="0.8"/>
+    <rect x="110" y="120" width="28" height="90" rx="2" fill="#84cc16" opacity="0.8"/>
+    <rect x="160" y="140" width="28" height="70" rx="2" fill="#84cc16" opacity="0.8"/>
+    <rect x="210" y="100" width="28" height="110" rx="2" fill="#84cc16" opacity="0.8"/>
+    <rect x="260" y="130" width="28" height="80" rx="2" fill="#84cc16" opacity="0.8"/>
+    <rect x="310" y="160" width="28" height="50" rx="2" fill="#84cc16" opacity="0.8"/>
+    <rect x="360" y="110" width="28" height="100" rx="2" fill="#84cc16" opacity="0.8"/>
+    <rect x="410" y="140" width="28" height="70" rx="2" fill="#84cc16" opacity="0.8"/>
+    <rect x="460" y="120" width="28" height="90" rx="2" fill="#84cc16" opacity="0.8"/>
+    <!-- Line -->
+    <polyline points="74,120 124,100 174,130 224,90 274,110 324,140 374,100 424,130 474,110" fill="none" stroke="#0f172a" stroke-width="2"/>
+  </g>
+  <!-- Activity List -->
+  <g transform="translate(592, 160)">
+    <rect x="0" y="0" width="292" height="240" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="16" y="24" font-family="sans-serif" font-size="12" font-weight="600" fill="#0f172a">Recent Activity</text>
+    <text x="16" y="48" font-family="sans-serif" font-size="10" fill="#64748b">USB-C Cable received +150</text>
+    <text x="16" y="68" font-family="sans-serif" font-size="10" fill="#64748b">PO-2024-001 approved ✓</text>
+    <text x="16" y="88" font-family="sans-serif" font-size="10" fill="#64748b">Wireless Mouse shipped -5</text>
+    <text x="16" y="108" font-family="sans-serif" font-size="10" fill="#64748b">Safety Glasses low stock alert !</text>
+    <text x="16" y="128" font-family="sans-serif" font-size="10" fill="#64748b">Copy Paper reorder triggered</text>
+    <text x="16" y="148" font-family="sans-serif" font-size="10" fill="#cbd5e1">──────────────</text>
+    <text x="16" y="168" font-family="sans-serif" font-size="10" fill="#cbd5e1">──────────────</text>
+  </g>
+  <!-- Sidebar hint -->
+  <rect x="0" y="64" width="4" height="336" fill="#0f172a" rx="2"/>
+</svg>
