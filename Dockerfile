@@ -10,6 +10,7 @@ WORKDIR /app
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/start.js ./
 COPY --from=builder /app/backend/package.json ./
+COPY --from=builder /app/backend/node_modules ./node_modules
 
 EXPOSE 8080
 ENV PORT=8080 NODE_OPTIONS="--max-old-space-size=128"

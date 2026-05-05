@@ -230,6 +230,29 @@ async function handleApiRoute(req, res) {
       const keyHash = createHash("sha256").update(rawKey).digest("hex");
       const exp = new Date(Date.now() + 30 * 86400000);
       await sql`INSERT INTO activation_keys (workspace_id, key_hash, tier, is_used, expires_at) VALUES (${workspaceId}, ${keyHash}, ${tier}, false, ${exp.toISOString()})`;
+
+      // Try to send email
+      try {
+        const nodemailer = require("nodemailer");
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST || "smtp.gmail.com",
+          port: parseInt(process.env.SMTP_PORT || "587"),
+          secure: false,
+          auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+        });
+        const [user] = await sql`SELECT * FROM users WHERE workspace_id = ${workspaceId} AND is_owner = true`;
+        if (user) {
+          await transporter.sendMail({
+            from: `"SupplyIQ" <${process.env.SMTP_USER}>`,
+            to: user.email,
+            subject: "Your SupplyIQ Activation Key",
+            html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto"><h1 style="color:#0f172a">Supply<span style="color:#84cc16">IQ</span></h1><p>Hi ${user.name},</p><p>Your activation key:</p><div style="background:#f5f5f5;padding:20px;border-radius:8px;text-align:center;margin:20px 0"><code style="font-size:22px;letter-spacing:3px;font-weight:700">${rawKey}</code></div><p>Enter this in the app to activate.</p></div>`,
+            text: `Your SupplyIQ activation key: ${rawKey}`,
+          });
+          console.log("[EMAIL] Sent to", user.email);
+        }
+      } catch (e) { console.warn("Email not sent:", e.message); }
+
       return json(res, 200, { activationKey: rawKey, tier, maxDevices: { "1yr": 2, "3yr": 5, "5yr": 10, "7yr": 20 }[tier] || 2 });
     }
 
