@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import heroBox3d from "@/assets/hero-box.png";
-import uiScreenshot from "@/assets/ui-screenshot-dashboard-v2.png.asset.json";
+const DASHBOARD_PREVIEW = "/dashboard-preview.svg";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -78,17 +78,17 @@ const featureTabs = [
   {
     label: "Dashboard",
     description: "See what matters most: stock levels, pending orders, recent movements, and alerts that need attention.",
-    image: uiScreenshot.url,
+    image: DASHBOARD_PREVIEW,
   },
   {
     label: "Catalog",
     description: "Powerful search, filters, bulk actions, and custom fields let you manage hundreds of SKUs effortlessly.",
-    image: uiScreenshot.url,
+    image: DASHBOARD_PREVIEW,
   },
   {
     label: "Analytics",
     description: "From stock trends to supplier performance, turn raw data into actionable insights and forecasts.",
-    image: uiScreenshot.url,
+    image: DASHBOARD_PREVIEW,
   },
 ];
 
@@ -407,7 +407,7 @@ function LandingPage() {
           <div className="mx-auto max-w-5xl">
             <BrowserFrame className="shadow-2xl shadow-primary/5">
               <img
-                src={uiScreenshot.url}
+                src={DASHBOARD_PREVIEW}
                 alt="SupplyIQ dashboard showing inventory metrics, stock levels chart, and recent activity"
                 className="w-full"
                 loading="lazy"

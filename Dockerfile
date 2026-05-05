@@ -1,17 +1,17 @@
 FROM oven/bun:1-alpine
 
 WORKDIR /app
-
-# Copy only backend — no desktop/packages needed
 COPY backend/ backend/
-
 WORKDIR /app/backend
+RUN bun install && bun run build
 
-# Install only production dependencies
-RUN bun install --production && bun add vite @vitejs/plugin-react
+FROM oven/bun:1-alpine
+WORKDIR /app
+COPY --from=0 /app/backend/dist ./dist
+COPY --from=0 /app/backend/start.js ./
+COPY --from=0 /app/backend/package.json ./
 
-EXPOSE 10000
+EXPOSE 8080
+ENV PORT=8080 NODE_OPTIONS="--max-old-space-size=128"
 
-ENV NODE_OPTIONS="--max-old-space-size=384"
-
-CMD ["sh", "-c", "bun run vite dev --port ${PORT:-10000} --host 0.0.0.0"]
+CMD ["bun", "run", "start.js"]
