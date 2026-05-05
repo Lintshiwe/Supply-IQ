@@ -1,10 +1,10 @@
-# Stackwise Application
+# SupplyIQ Application
 
 > Multi-warehouse Inventory Management System — Backend + Desktop App
 
 ## About
 
-Stackwise is a full-stack industrial inventory management platform built for South African businesses. This monorepo contains:
+SupplyIQ is a full-stack industrial inventory management platform built for South African businesses. This monorepo contains:
 
 - **Backend** — TanStack Start application with PostgreSQL database
 - **Desktop** — Tauri desktop app (Windows, macOS, Linux)
@@ -138,4 +138,5 @@ bun run build:desktop   # Build installers
 
 ## Related Repos
 
-- **Stackwise Landing**: Public marketing website at `/landing`
+- **SupplyIQ Landing**: Public marketing website at `/landing`
+# Supply-IQ
