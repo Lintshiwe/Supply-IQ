@@ -1,17 +1,18 @@
-FROM oven/bun:1-alpine AS builder
+FROM oven/bun:1-alpine
+
 WORKDIR /app
+
+# Copy workspace config and all packages
 COPY package.json bun.lock ./
 COPY packages/ packages/
 COPY backend/ backend/
-RUN bun install
-WORKDIR /app/backend
-RUN bun run build
 
-FROM oven/bun:1-alpine
-WORKDIR /app
-COPY --from=builder /app/backend/dist ./backend/dist
-COPY --from=builder /app/backend/node_modules ./backend/node_modules
-COPY --from=builder /app/backend/package.json ./backend/
-COPY --from=builder /app/backend/server.js ./backend/
-EXPOSE 8082
-CMD ["bun", "run", "backend/server.js"]
+# Install dependencies
+RUN cd backend && bun install
+
+# Expose port
+EXPOSE 8080
+
+# Start dev server
+WORKDIR /app/backend
+CMD ["sh", "-c", "NODE_OPTIONS='--no-deprecation' bun run vite dev --port ${PORT:-8080} --host 0.0.0.0"]
