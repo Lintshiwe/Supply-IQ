@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, extname, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes, createHash } from "node:crypto";
@@ -110,15 +110,40 @@ function createSession(userId, workspaceId, role) {
 
 // ─── Static Files ────────────────────────────────────────
 function serveStatic(url, res) {
-  const filePath = join(STATIC_DIR, url);
-  if (!existsSync(filePath)) return false;
-  const mime = MIME_TYPES[extname(filePath)] || "application/octet-stream";
-  try {
-    const data = readFileSync(filePath);
-    res.writeHead(200, { "Content-Type": mime, "Content-Length": data.length });
-    res.end(data);
-    return true;
-  } catch { return false; }
+  // Try exact match first
+  let filePath = join(STATIC_DIR, url);
+  if (existsSync(filePath)) {
+    try {
+      const data = readFileSync(filePath);
+      const mime = MIME_TYPES[extname(filePath)] || "application/octet-stream";
+      res.writeHead(200, { "Content-Type": mime, "Content-Length": data.length });
+      res.end(data);
+      return true;
+    } catch {}
+  }
+
+  // Handle hashed filenames: /assets/styles-ABC123.css → find styles-*.css
+  const match = url.match(/^(.*\/)([a-zA-Z]+)-[a-zA-Z0-9]+\.(\w+)$/);
+  if (match) {
+    const dir = join(STATIC_DIR, match[1]);
+    const prefix = match[2];
+    const ext = match[3];
+    if (existsSync(dir)) {
+      const files = readdirSync(dir);
+      const found = files.find(f => f.startsWith(prefix + "-") && f.endsWith("." + ext));
+      if (found) {
+        filePath = join(dir, found);
+        try {
+          const data = readFileSync(filePath);
+          const mime = MIME_TYPES["." + ext] || "application/octet-stream";
+          res.writeHead(200, { "Content-Type": mime, "Content-Length": data.length, "Cache-Control": "public, max-age=31536000" });
+          res.end(data);
+          return true;
+        } catch {}
+      }
+    }
+  }
+  return false;
 }
 
 // ─── API Routes ──────────────────────────────────────────
