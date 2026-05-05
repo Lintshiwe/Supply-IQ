@@ -1,59 +1,76 @@
 import { createServer } from "node:http";
-import { Readable } from "node:stream";
 
 const PORT = process.env.PORT || 8080;
 
 async function start() {
-  let handler;
-
   try {
     const mod = await import("./dist/server/index.js");
-    handler = mod.default;
-    console.log("Loaded TanStack Start handler");
-  } catch (e) {
-    console.warn("Handler load failed:", e.message);
-  }
+    const handler = mod.default || mod.createServerEntry;
 
-  const server = createServer(async (req, res) => {
-    // Health check
-    if (req.url === "/api/health") {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      return res.end(JSON.stringify({ status: "healthy", version: "1.0.5" }));
-    }
+    if (!handler) throw new Error("No handler found");
 
-    // CORS
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    const server = createServer(async (req, res) => {
+      // Health check
+      if (req.url === "/api/health") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ status: "healthy", version: "1.0.5" }));
+      }
 
-    if (handler) {
       try {
-        const response = await handler(req);
-        res.writeHead(response.status || 200,
-          Object.fromEntries(response.headers?.entries() || [])
-        );
+        // Convert Node req to Web Request
+        const url = `http://${req.headers.host || "localhost"}${req.url}`;
+        const headers = new Headers();
+        for (const [k, v] of Object.entries(req.headers)) {
+          if (v) headers.set(k, Array.isArray(v) ? v.join(", ") : v);
+        }
+
+        const body = req.method !== "GET" && req.method !== "HEAD"
+          ? await new Promise((resolve) => {
+              const chunks = [];
+              req.on("data", (c) => chunks.push(c));
+              req.on("end", () => resolve(Buffer.concat(chunks)));
+            })
+          : undefined;
+
+        const webReq = new Request(url, {
+          method: req.method,
+          headers,
+          body,
+        });
+
+        const response = await handler(webReq);
+
+        // Send back response
+        const resHeaders = {};
+        response.headers?.forEach((v, k) => { resHeaders[k] = v; });
+        res.writeHead(response.status || 200, resHeaders);
 
         if (response.body) {
-          if (response.body.getReader) {
-            const reader = response.body.getReader();
-            for (;;) { const { done, value } = await reader.read(); if (done) break; res.write(value); }
-            res.end();
-          } else {
-            Readable.fromWeb(response.body).pipe(res);
+          const reader = response.body.getReader();
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            res.write(value);
           }
-        } else {
-          res.end();
         }
-        return;
+        res.end();
       } catch (e) {
-        console.error("Handler error:", e.message);
+        console.error("Request error:", e.message);
+        res.writeHead(500);
+        res.end("Internal Server Error");
       }
-    }
+    });
 
+    server.listen(PORT, () => console.log(`SupplyIQ running on http://localhost:${PORT}`));
+  } catch (e) {
+    console.error("Startup error:", e.message);
     // Fallback
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(`<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh"><div style="text-align:center"><h1 style="color:#84cc16">SupplyIQ</h1><p>API Running</p></div></body></html>`);
-  });
-
-  server.listen(PORT, () => console.log(`SupplyIQ API on port ${PORT}`));
+    const s = createServer((_, res) => {
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end("<h1>SupplyIQ</h1><p>API Running</p>");
+    });
+    s.listen(PORT, () => console.log(`Fallback on ${PORT}`));
+  }
 }
 
-start().catch(e => { console.error(e); process.exit(1); });
+start();
