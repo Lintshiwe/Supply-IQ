@@ -28,13 +28,13 @@ function AppLayout() {
 
   useKeyboardShortcuts({ onHelpOpen: () => setHelpOpen(true) });
 
-  // Role-based route guard
+  // Role-based route guard (only when authenticated or in demo)
   useEffect(() => {
-    if (!canAccessRoute(location.pathname, role)) {
+    if ((isAuthenticated || isDemo) && !canAccessRoute(location.pathname, role)) {
       toast.error("You don't have permission to access that page.");
       navigate({ to: "/app/dashboard" });
     }
-  }, [location.pathname, role, navigate]);
+  }, [location.pathname, role, navigate, isAuthenticated, isDemo]);
 
   // Auth guard — redirect to landing if not authenticated and not in demo
   useEffect(() => {
