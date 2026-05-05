@@ -1,26 +1,28 @@
 {
-  "$schema": "https://raw.githubusercontent.com/nicedayzhu/tauri-docs/refs/heads/dev/src/content/docs/_schema/config.schema.json",
   "productName": "SupplyIQ",
   "version": "1.0.0",
   "identifier": "com.supplyiq.desktop",
   "build": {
-    "frontendDist": "../backend/dist",
+    "frontendDist": "../src",
     "devUrl": "http://localhost:8080",
-    "beforeDevCommand": "bun run --cwd ../backend dev",
-    "beforeBuildCommand": "bun run --cwd ../backend build"
+    "beforeDevCommand": "",
+    "beforeBuildCommand": ""
   },
   "app": {
+    "withGlobalTauri": true,
     "title": "SupplyIQ — Inventory Command Center",
     "windows": [
       {
         "title": "SupplyIQ",
+        "label": "main",
         "width": 1280,
         "height": 800,
         "minWidth": 1024,
         "minHeight": 600,
         "resizable": true,
         "fullscreen": false,
-        "center": true
+        "center": true,
+        "url": "/index.html"
       }
     ],
     "security": {
@@ -30,25 +32,13 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "windows": {
-      "wix": {
-        "language": "en-US"
-      }
-    },
-    "macOS": {
-      "minimumSystemVersion": "11.0"
-    },
-    "linux": {
-      "deb": {
-        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"]
-      }
-    }
+    ]
   }
 }
