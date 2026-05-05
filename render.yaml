@@ -1,10 +1,11 @@
 services:
   - type: web
     name: supplyiq-api
-    runtime: docker
+    runtime: node
     region: frankfurt
     plan: free
-    dockerfilePath: ./Dockerfile
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npx vite preview --port $PORT --host 0.0.0.0
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -20,6 +21,8 @@ services:
         generateValue: true
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: "10000"
     healthCheckPath: /api/health
 
 databases:

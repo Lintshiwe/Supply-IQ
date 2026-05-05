@@ -5,11 +5,10 @@ const path = require("path");
 const APP_URL = process.env.SUPPLYIQ_URL || "http://localhost:8082";
 
 // Set app name for Windows taskbar / macOS dock
-// Disable sandbox + GPU for localhost dev
+// Disable sandbox + GPU + shm for localhost dev
 app.commandLine.appendSwitch("no-sandbox");
 app.commandLine.appendSwitch("disable-gpu-sandbox");
-app.commandLine.appendSwitch("disable-gpu");
-app.commandLine.appendSwitch("in-process-gpu");
+app.commandLine.appendSwitch("disable-dev-shm-usage");
 app.setName("SupplyIQ");
 
 let mainWindow;
@@ -40,7 +39,7 @@ function createWindow() {
   // Remove menu bar
   Menu.setApplicationMenu(null);
 
-  mainWindow.loadURL(APP_URL + "/app/dashboard");
+  mainWindow.loadURL(APP_URL);
 
   // Handle load failures gracefully
   mainWindow.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
