@@ -24,7 +24,7 @@ import { CostTrendChart } from "@/components/analytics/CostTrendChart";
 
 export const Route = createFileRoute("/app/analytics")({
   component: AnalyticsPage,
-  head: () => ({ meta: [{ title: "Analytics — SupplyIQ" }] }),
+  head: () => ({ meta: [{ title: "Analytics | SupplyIQ" }] }),
 });
 
 function AnalyticsPage() {

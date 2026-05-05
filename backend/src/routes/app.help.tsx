@@ -14,7 +14,7 @@ import { TUTORIALS } from "@/lib/tutorials";
 
 export const Route = createFileRoute("/app/help")({
   component: HelpPage,
-  head: () => ({ meta: [{ title: "Help Center — SupplyIQ" }] }),
+  head: () => ({ meta: [{ title: "Help Center | SupplyIQ" }] }),
 });
 
 function HelpPage() {

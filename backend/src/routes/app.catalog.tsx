@@ -42,7 +42,7 @@ interface CatalogSearch {
 
 export const Route = createFileRoute("/app/catalog")({
   component: CatalogPage,
-  head: () => ({ meta: [{ title: "Catalog — SupplyIQ" }] }),
+  head: () => ({ meta: [{ title: "Catalog | SupplyIQ" }] }),
   validateSearch: (search: Record<string, unknown>): CatalogSearch => ({
     item: typeof search.item === "string" ? search.item : undefined,
     newItem: typeof search.newItem === "string" ? search.newItem : undefined,

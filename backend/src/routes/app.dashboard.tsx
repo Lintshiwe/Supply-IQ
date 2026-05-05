@@ -25,7 +25,7 @@ const TOUR_STEPS: TourStep[] = [
 
 export const Route = createFileRoute("/app/dashboard")({
   component: DashboardPage,
-  head: () => ({ meta: [{ title: "Dashboard — SupplyIQ" }] }),
+  head: () => ({ meta: [{ title: "Dashboard | SupplyIQ" }] }),
 });
 
 function DashboardPage() {

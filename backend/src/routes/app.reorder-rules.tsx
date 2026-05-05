@@ -16,7 +16,7 @@ export const Route = createFileRoute("/app/reorder-rules")({
   component: ReorderRulesPage,
   head: () => ({
     meta: [
-      { title: "Reorder Rules — SupplyIQ" },
+      { title: "Reorder Rules | SupplyIQ" },
       { name: "description", content: "Set per-item reorder points, alert thresholds, and order quantities." },
     ],
   }),

@@ -15,7 +15,7 @@ import type { LocationTreeNode } from "@/hooks/useLocations";
 
 export const Route = createFileRoute("/app/locations")({
   component: LocationsPage,
-  head: () => ({ meta: [{ title: "Locations — SupplyIQ" }] }),
+  head: () => ({ meta: [{ title: "Locations | SupplyIQ" }] }),
 });
 
 function findNode(nodes: LocationTreeNode[], id: string): LocationTreeNode | null {

@@ -12,9 +12,9 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SupplyIQ — Inventory Command Center" },
-      { name: "description", content: "Industrial inventory management for multi-warehouse operations. Track stock, manage suppliers, automate reorders, and keep your team aligned." },
-      { property: "og:title", content: "SupplyIQ — Inventory Command Center" },
+      { title: "SupplyIQ" },
+      { name: "description", content: "Industrial inventory management for multi-warehouse operations." },
+      { property: "og:title", content: "SupplyIQ" },
       { property: "og:description", content: "Industrial inventory management for multi-warehouse operations." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -22,10 +22,8 @@ export const Route = createRootRoute({
       { name: "twitter:description", content: "Industrial inventory management for multi-warehouse operations." },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "icon", type: "image/svg+xml", href: "/icon.svg" },
+      { rel: "stylesheet", href: appCss },
     ],
   }),
   shellComponent: RootShell,

@@ -13,7 +13,7 @@ import { UserManagement } from "@/components/settings/UserManagement";
 
 export const Route = createFileRoute("/app/settings")({
   component: SettingsPage,
-  head: () => ({ meta: [{ title: "Settings — SupplyIQ" }] }),
+  head: () => ({ meta: [{ title: "Settings | SupplyIQ" }] }),
 });
 
 function SettingsPage() {

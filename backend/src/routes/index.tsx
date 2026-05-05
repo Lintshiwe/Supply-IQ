@@ -24,13 +24,13 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
   head: () => ({
     meta: [
-      { title: "SupplyIQ — Inventory Command Center" },
+      { title: "SupplyIQ" },
       {
         name: "description",
         content:
           "Real-time inventory management for businesses of any size. Track stock, manage suppliers, automate reorders, and keep your team aligned.",
       },
-      { property: "og:title", content: "SupplyIQ — Inventory Command Center" },
+      { property: "og:title", content: "SupplyIQ" },
       {
         property: "og:description",
         content:
