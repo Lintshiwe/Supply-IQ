@@ -5,6 +5,9 @@ const path = require("path");
 const APP_URL = process.env.SUPPLYIQ_URL || "http://localhost:8082";
 
 // Set app name for Windows taskbar / macOS dock
+// Disable sandbox for localhost connections
+app.commandLine.appendSwitch("no-sandbox");
+app.commandLine.appendSwitch("disable-gpu-sandbox");
 app.setName("SupplyIQ");
 
 let mainWindow;
@@ -36,6 +39,21 @@ function createWindow() {
   Menu.setApplicationMenu(null);
 
   mainWindow.loadURL(APP_URL + "/app/dashboard");
+
+  // Handle load failures gracefully
+  mainWindow.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
+    console.error(`Failed to load: ${validatedURL} — ${errorDescription}`);
+    mainWindow.loadURL(`data:text/html,
+      <html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+      <div style="text-align:center">
+        <h1 style="color:#84cc16">SupplyIQ</h1>
+        <p style="color:#94a3b8;margin:8px 0">Cannot connect to backend at</p>
+        <code style="background:#1e293b;padding:4px 8px;border-radius:4px;color:#e2e8f0">${APP_URL}</code>
+        <p style="color:#94a3b8;margin-top:16px;font-size:14px">Start the backend first:</p>
+        <pre style="background:#1e293b;padding:8px;border-radius:4px;color:#e2e8f0;font-size:13px">cd application && bun run dev:app</pre>
+        <p style="color:#64748b;font-size:12px;margin-top:16px">Error: ${errorDescription}</p>
+      </div></body></html>`);
+  });
 
   mainWindow.on("closed", () => {
     mainWindow = null;
