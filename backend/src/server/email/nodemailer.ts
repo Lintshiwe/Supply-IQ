@@ -16,7 +16,7 @@ export async function sendActivationKeyEmail(
   userName: string
 ): Promise<boolean> {
   const mailOptions = {
-    from: `"SupplyIQ" <${process.env.SMTP_USER || "noreply@supplyiq.app"}>`,
+    from: `"SupplyIQ" <sladethedeciever@gmail.com>`,
     to,
     subject: "Your SupplyIQ Activation Key",
     html: `
@@ -51,20 +51,13 @@ export async function sendActivationKeyEmail(
   };
 
   try {
-    if (
-      process.env.SMTP_USER &&
-      process.env.SMTP_PASS &&
-      process.env.SMTP_USER !== "placeholder@example.com" &&
-      process.env.SMTP_PASS !== "PLACEHOLDER_APP_PASSWORD"
-    ) {
-      await transporter.sendMail(mailOptions);
-      console.log(`[EMAIL] Activation key sent to ${to}`);
-    } else {
-      console.log(`[EMAIL PLACEHOLDER] Would send to ${to}: ${key}`);
-    }
+    await transporter.sendMail(mailOptions);
+    console.log(`[EMAIL] Activation key sent to ${to}`);
     return true;
   } catch (error) {
     console.error("[EMAIL ERROR]", error);
+    // Fallback: log to console if email sending fails
+    console.log(`[EMAIL FALLBACK] Key for ${to}: ${key}`);
     return false;
   }
 }
