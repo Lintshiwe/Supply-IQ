@@ -5,11 +5,11 @@ const path = require("path");
 const APP_URL = process.env.SUPPLYIQ_URL || "https://supplyiq-api.onrender.com";
 
 // Set app name for Windows taskbar / macOS dock
-// Disable sandbox + GPU + shm + vsync for desktop
+// Suppress Chromium GPU errors (headless/server environments)
 app.commandLine.appendSwitch("no-sandbox");
 app.commandLine.appendSwitch("disable-gpu-sandbox");
 app.commandLine.appendSwitch("disable-dev-shm-usage");
-app.commandLine.appendSwitch("disable-gpu-vsync");
+app.commandLine.appendSwitch("disable-gpu");
 app.setName("SupplyIQ");
 
 let mainWindow;
