@@ -379,6 +379,12 @@ async function handleApiRoute(req, res) {
     const cookie = req.headers.cookie || "";
     const match = cookie.match(/session=([^;]+)/);
     if (match && verifySession(match[1])) {
+      // Check blacklist
+      if (dbConnected) {
+        const hash = createHash("sha256").update(match[1] + "blacklist").digest("hex");
+        const [bl] = await sql`SELECT 1 FROM token_blacklist WHERE token_hash = ${hash}`;
+        if (bl) return json(res, 200, { authenticated: false, user: null });
+      }
       const s = verifySession(match[1]);
       if (dbConnected) {
         try {
@@ -412,7 +418,7 @@ async function handleApiRoute(req, res) {
     return json(res, 200, { authenticated: false, user: null });
   }
 
-  // Logout — blacklist token for real cross-platform sign-out
+  // Logout — blacklist token AND clear cookie server-side
   if (req.url === "/api/logout" && req.method === "POST") {
     const cookie = req.headers.cookie || "";
     const match = cookie.match(/session=([^;]+)/);
@@ -420,7 +426,11 @@ async function handleApiRoute(req, res) {
       const hash = createHash("sha256").update(match[1] + "blacklist").digest("hex");
       await sql`INSERT INTO token_blacklist (token_hash) VALUES (${hash}) ON CONFLICT DO NOTHING`;
     }
-    return json(res, 200, { message: "Logged out" });
+    res.writeHead(200, {
+      "Content-Type": "application/json",
+      "Set-Cookie": "session=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0",
+    });
+    return res.end(JSON.stringify({ message: "Logged out" }));
   }
 
   // Parse body

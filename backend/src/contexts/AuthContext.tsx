@@ -125,12 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await fetch("/api/logout", { method: "POST" });
-    } catch { /* ignore */ }
-    document.cookie = "session=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0";
-    setUser(null);
-    setWorkspace(null);
+    try { await fetch("/api/logout", { method: "POST" }); } catch {}
+    setUser(null); setWorkspace(null); setSubscription(null); setError(null);
     setSubscription(null);
     setError(null);
   }, []);

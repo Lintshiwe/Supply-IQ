@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import heroBox3d from "@/assets/hero-box.png";
-const DASHBOARD_PREVIEW = "/dashboard-preview.png";
+const DASHBOARD_PREVIEW = "/dashboard-preview.svg";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
