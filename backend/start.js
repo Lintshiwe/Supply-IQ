@@ -129,6 +129,7 @@ async function sendEmail(to, subject, html, text) {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return false;
   try {
     if (!_nodemailer) _nodemailer = (await import("nodemailer")).default;
+    console.log("[EMAIL] Attempting send to", to, "via", process.env.SMTP_HOST);
     const transporter = _nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.gmail.com",
       port: parseInt(process.env.SMTP_PORT || "587"), secure: false,
@@ -191,7 +192,12 @@ async function handleApiRoute(req, res) {
     const sent = await sendEmail("ntoanpilp@gmail.com", "SupplyIQ Email Test",
       "<h1>SupplyIQ</h1><p>Email service is working.</p>",
       "SupplyIQ email test successful.");
-    return json(res, 200, { emailSent: sent, smtpConfigured: !!(process.env.SMTP_USER && process.env.SMTP_PASS) });
+    return json(res, 200, {
+      emailSent: sent,
+      smtpConfigured: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
+      smtpHost: process.env.SMTP_HOST,
+      smtpUser: process.env.SMTP_USER,
+    });
   }
 
   if (req.url === "/api/health") {

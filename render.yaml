@@ -15,7 +15,7 @@ services:
       - key: SMTP_USER
         value: sladethedeciever@gmail.com
       - key: SMTP_PASS
-        value: rxtt zokl eurm ojti
+        value: rxttzokleurmojti
       - key: SESSION_SECRET
         value: 2a3f339685ea4eac09a6100da64525de2f3b25635b9b824c2a84c7f34a7e8640
       - key: NODE_ENV
