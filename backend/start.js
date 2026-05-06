@@ -87,9 +87,148 @@ async function ensureTables() {
       created_at TIMESTAMPTZ DEFAULT now()
     )
   `;
+
+  // Inventory tables
+  await sql`
+    CREATE TABLE IF NOT EXISTS categories (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      parent_id UUID,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS suppliers (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      name TEXT NOT NULL,
+      contact_name TEXT DEFAULT '',
+      email TEXT DEFAULT '',
+      phone TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      lead_time_days INT DEFAULT 7,
+      rating NUMERIC(3,1) DEFAULT 0,
+      is_active BOOLEAN DEFAULT true,
+      notes TEXT DEFAULT '',
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS locations (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      name TEXT NOT NULL,
+      type TEXT DEFAULT 'warehouse',
+      parent_id UUID,
+      description TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS items (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      sku TEXT NOT NULL,
+      barcode TEXT,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      category_id UUID,
+      status TEXT DEFAULT 'active',
+      unit TEXT DEFAULT 'each',
+      current_stock INT DEFAULT 0,
+      reorder_point INT DEFAULT 0,
+      reorder_quantity INT DEFAULT 0,
+      cost_price NUMERIC(10,2) DEFAULT 0,
+      selling_price NUMERIC(10,2) DEFAULT 0,
+      location_id UUID,
+      supplier_id UUID,
+      image_url TEXT,
+      custom_fields JSONB DEFAULT '{}',
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS movements (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      item_id UUID NOT NULL,
+      type TEXT NOT NULL,
+      quantity INT NOT NULL,
+      from_location_id UUID,
+      to_location_id UUID,
+      reference TEXT DEFAULT '',
+      notes TEXT DEFAULT '',
+      performed_by TEXT DEFAULT '',
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS purchase_orders (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      order_number TEXT NOT NULL,
+      supplier_id UUID NOT NULL,
+      status TEXT DEFAULT 'draft',
+      items JSONB DEFAULT '[]',
+      total_cost NUMERIC(12,2) DEFAULT 0,
+      expected_delivery TIMESTAMPTZ,
+      notes TEXT DEFAULT '',
+      created_by TEXT DEFAULT '',
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS requests (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      request_number TEXT NOT NULL,
+      title TEXT DEFAULT '',
+      status TEXT DEFAULT 'pending',
+      priority TEXT DEFAULT 'normal',
+      items JSONB DEFAULT '[]',
+      requested_by TEXT DEFAULT '',
+      approved_by TEXT,
+      reason TEXT DEFAULT '',
+      decline_reason TEXT,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT DEFAULT '',
+      is_read BOOLEAN DEFAULT false,
+      link TEXT,
+      reference_id TEXT,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
 }
 
 // ─── Auth Helpers ────────────────────────────────────────
+function getWsId(req) {
+  const cookie = req.headers.cookie || "";
+  const match = cookie.match(/session=([^;]+)/);
+  if (match) {
+    const s = verifySession(match[1]);
+    if (s) return s.workspaceId;
+  }
+  return null;
+}
+
 function hashPassword(pw) {
   const salt = randomBytes(16).toString("hex");
   const h = createHash("sha256").update(salt + pw).digest("hex");
@@ -419,6 +558,94 @@ async function handleApiRoute(req, res) {
       if (!user) return json(res, 400, { error: "Invalid or expired reset token" });
       await sql`UPDATE users SET password_hash = ${hashPassword(password)}, reset_token = NULL, reset_expires = NULL WHERE id = ${user.id}`;
       return json(res, 200, { message: "Password reset successfully." });
+    }
+
+    // ─── CRUD: Items ────────────────────────────────────
+    if (req.url === "/api/items" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      const items = wsId ? await sql`SELECT * FROM items WHERE workspace_id = ${wsId}::uuid ORDER BY updated_at DESC` : [];
+      return json(res, 200, items);
+    }
+    if (req.url === "/api/items" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { name, sku, description, categoryId, unit, currentStock, reorderPoint, reorderQuantity, costPrice, sellingPrice, locationId, supplierId, barcode } = body;
+      const [item] = await sql`
+        INSERT INTO items (workspace_id, name, sku, description, category_id, unit, current_stock, reorder_point, reorder_quantity, cost_price, selling_price, location_id, supplier_id, barcode)
+        VALUES (${wsId}::uuid, ${name || ""}, ${sku || ""}, ${description || ""}, ${categoryId || null}::uuid, ${unit || "each"}, ${currentStock || 0}, ${reorderPoint || 0}, ${reorderQuantity || 0}, ${costPrice || 0}, ${sellingPrice || 0}, ${locationId || null}::uuid, ${supplierId || null}::uuid, ${barcode || null})
+        RETURNING *`;
+      return json(res, 201, item);
+    }
+    if (req.url === "/api/items/update" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const { id, updates } = body;
+      const setClauses = Object.entries(updates).filter(([k]) => !["id","workspace_id","created_at"].includes(k));
+      if (setClauses.length === 0) return json(res, 400, { error: "No updates" });
+      const [item] = await sql`UPDATE items SET ${sql(setClauses.map(([k,v]) => sql`${sql(k)} = ${v}`))}, updated_at = now() WHERE id = ${id}::uuid RETURNING *`;
+      return json(res, 200, item);
+    }
+    if (req.url === "/api/items/delete" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      await sql`DELETE FROM items WHERE id = ${body.id}::uuid`;
+      return json(res, 200, { success: true });
+    }
+
+    // ─── CRUD: Suppliers ────────────────────────────────
+    if (req.url === "/api/suppliers" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      const result = wsId ? await sql`SELECT * FROM suppliers WHERE workspace_id = ${wsId}::uuid ORDER BY name` : [];
+      return json(res, 200, result);
+    }
+    if (req.url === "/api/suppliers" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { name, contactName, email, phone, address, leadTimeDays, rating, notes } = body;
+      const [s] = await sql`
+        INSERT INTO suppliers (workspace_id, name, contact_name, email, phone, address, lead_time_days, rating, notes)
+        VALUES (${wsId}::uuid, ${name}, ${contactName || ""}, ${email || ""}, ${phone || ""}, ${address || ""}, ${leadTimeDays || 7}, ${rating || "0"}, ${notes || ""})
+        RETURNING *`;
+      return json(res, 201, s);
+    }
+
+    // ─── CRUD: Purchase Orders ──────────────────────────
+    if (req.url === "/api/purchase-orders" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      const result = wsId ? await sql`SELECT * FROM purchase_orders WHERE workspace_id = ${wsId}::uuid ORDER BY created_at DESC` : [];
+      return json(res, 200, result);
+    }
+
+    // ─── CRUD: Movements ────────────────────────────────
+    if (req.url === "/api/movements" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      const result = wsId ? await sql`SELECT * FROM movements WHERE workspace_id = ${wsId}::uuid ORDER BY created_at DESC LIMIT 50` : [];
+      return json(res, 200, result);
+    }
+
+    // ─── Stock Summary ──────────────────────────────────
+    if (req.url === "/api/stock-summary" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      const items = wsId ? await sql`SELECT * FROM items WHERE workspace_id = ${wsId}::uuid` : [];
+      return json(res, 200, {
+        total: items.length,
+        inStock: items.filter(i => i.current_stock > i.reorder_point).length,
+        lowStock: items.filter(i => i.current_stock > 0 && i.current_stock <= i.reorder_point).length,
+        outOfStock: items.filter(i => i.current_stock === 0).length,
+      });
+    }
+
+    // ─── Locations ──────────────────────────────────────
+    if (req.url === "/api/locations" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      const result = wsId ? await sql`SELECT * FROM locations WHERE workspace_id = ${wsId}::uuid ORDER BY name` : [];
+      return json(res, 200, result);
     }
 
     return json(res, 404, { error: "Unknown endpoint" });
