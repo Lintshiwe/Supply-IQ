@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { useDemo } from "@/hooks/useDemo";
-import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
 import { X } from "lucide-react";
 
 export function DemoBanner() {
   const { isDemo, exitDemoMode } = useDemo();
-  const { role } = useRole();
   const { isAuthenticated, subscription } = useAuth();
   const [dismissed, setDismissed] = useState(false);
 
@@ -55,8 +53,6 @@ export function DemoBanner() {
 
   // Demo mode banner (unauthenticated)
   if (!isDemo || dismissed) return null;
-
-  const currentLabel = roles.find((r) => r.value === role)?.label ?? "Admin";
 
   return (
     <div className="sticky top-0 z-50 flex h-10 w-full items-center justify-between bg-primary px-3 text-sm font-medium text-primary-foreground">
