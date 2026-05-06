@@ -33,7 +33,13 @@
     "linux": {
       "target": ["AppImage", "deb"],
       "icon": "assets/icon.png",
-      "category": "Office"
+      "category": "Office",
+      "desktop": {
+        "Name": "SupplyIQ",
+        "Comment": "Industrial Inventory Command Center",
+        "Icon": "supplyiq-desktop",
+        "Categories": "Office;Utility;"
+      }
     }
   },
   "devDependencies": {
