@@ -123,6 +123,22 @@ function verifySession(token) {
   } catch { return null; }
 }
 
+// ─── Email ───────────────────────────────────────────────
+let _nodemailer = null;
+async function sendEmail(to, subject, html, text) {
+  try {
+    if (!_nodemailer) _nodemailer = require("nodemailer");
+    const transporter = _nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.SMTP_PORT || "587"), secure: false,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+    await transporter.sendMail({ from: `\"SupplyIQ\" <${process.env.SMTP_USER}>`, to, subject, html, text });
+    console.log("[EMAIL] Sent to", to);
+    return true;
+  } catch (e) { console.warn("[EMAIL] Failed:", e.message); return false; }
+}
+
 // ─── Static Files ────────────────────────────────────────
 function serveStatic(url, res) {
   // Try exact match first
@@ -324,26 +340,10 @@ async function handleApiRoute(req, res) {
       await sql`INSERT INTO activation_keys (workspace_id, key_hash, tier, is_used, expires_at) VALUES (${workspaceId}, ${keyHash}, ${tier}, false, ${exp.toISOString()})`;
 
       // Try to send email
-      try {
-        const nodemailer = require("nodemailer");
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST || "smtp.gmail.com",
-          port: parseInt(process.env.SMTP_PORT || "587"),
-          secure: false,
-          auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-        });
-        const [user] = await sql`SELECT * FROM users WHERE workspace_id = ${workspaceId} AND is_owner = true`;
-        if (user) {
-          await transporter.sendMail({
-            from: `"SupplyIQ" <${process.env.SMTP_USER}>`,
-            to: user.email,
-            subject: "Your SupplyIQ Activation Key",
-            html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto"><h1 style="color:#0f172a">Supply<span style="color:#84cc16">IQ</span></h1><p>Hi ${user.name},</p><p>Your activation key:</p><div style="background:#f5f5f5;padding:20px;border-radius:8px;text-align:center;margin:20px 0"><code style="font-size:22px;letter-spacing:3px;font-weight:700">${rawKey}</code></div><p>Enter this in the app to activate.</p></div>`,
-            text: `Your SupplyIQ activation key: ${rawKey}`,
-          });
-          console.log("[EMAIL] Sent to", user.email);
-        }
-      } catch (e) { console.warn("Email not sent:", e.message); }
+      const [user] = dbConnected ? await sql`SELECT * FROM users WHERE workspace_id = ${workspaceId}::uuid AND is_owner = true` : [null];
+      if (user) sendEmail(user.email, "Your SupplyIQ Activation Key",
+        `<div style="font-family:sans-serif;max-width:600px;margin:0 auto"><h1>Supply<span style="color:#84cc16">IQ</span></h1><p>Hi ${user.name},</p><p>Your activation key:</p><div style="background:#f5f5f5;padding:20px;border-radius:8px;text-align:center;margin:20px 0"><code style="font-size:22px;letter-spacing:3px;font-weight:700">${rawKey}</code></div></div>`,
+        `Your SupplyIQ activation key: ${rawKey}`);
 
       return json(res, 200, { activationKey: rawKey, tier, maxDevices: { "1yr": 2, "3yr": 5, "5yr": 10, "7yr": 20 }[tier] || 2 });
     }
@@ -366,20 +366,9 @@ async function handleApiRoute(req, res) {
         await sql`UPDATE users SET reset_token = ${resetToken}, reset_expires = ${expires.toISOString()} WHERE id = ${user.id}`;
 
         // Try to send email
-        try {
-          const nodemailer = require("nodemailer");
-          const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST || "smtp.gmail.com",
-            port: parseInt(process.env.SMTP_PORT || "587"), secure: false,
-            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-          });
-          await transporter.sendMail({
-            from: `"SupplyIQ" <${process.env.SMTP_USER}>`, to: user.email,
-            subject: "Reset your SupplyIQ password",
-            html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto"><h1>Supply<span style="color:#84cc16">IQ</span></h1><p>Click below to reset your password:</p><a href="https://supplyiq.netlify.app/reset-password?token=${resetToken}" style="display:inline-block;background:#84cc16;color:#0f172a;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Reset Password</a><p style="color:#94a3b8;font-size:12px">Link expires in 1 hour.</p></div>`,
-          });
-          console.log("[EMAIL] Reset link sent to", user.email);
-        } catch (e) { console.warn("Email not sent:", e.message); }
+        sendEmail(user.email, "Reset your SupplyIQ password",
+          `<div style="font-family:sans-serif;max-width:600px;margin:0 auto"><h1>Supply<span style="color:#84cc16">IQ</span></h1><p>Click below to reset your password:</p><a href="https://supplyiq.netlify.app/reset-password?token=${resetToken}" style="display:inline-block;background:#84cc16;color:#0f172a;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Reset Password</a><p style="color:#94a3b8;font-size:12px">Link expires in 1 hour.</p></div>`,
+          `Reset your SupplyIQ password: https://supplyiq.netlify.app/reset-password?token=${resetToken}`);
       }
       return json(res, 200, { message: "If the email exists, a reset link has been sent." });
     }
