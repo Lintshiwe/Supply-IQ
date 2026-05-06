@@ -87,6 +87,12 @@ async function ensureTables() {
       created_at TIMESTAMPTZ DEFAULT now()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS token_blacklist (
+      token_hash TEXT PRIMARY KEY,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
 
   // Inventory tables
   await sql`
@@ -404,6 +410,17 @@ async function handleApiRoute(req, res) {
       });
     }
     return json(res, 200, { authenticated: false, user: null });
+  }
+
+  // Logout — blacklist token for real cross-platform sign-out
+  if (req.url === "/api/logout" && req.method === "POST") {
+    const cookie = req.headers.cookie || "";
+    const match = cookie.match(/session=([^;]+)/);
+    if (match && dbConnected) {
+      const hash = createHash("sha256").update(match[1] + "blacklist").digest("hex");
+      await sql`INSERT INTO token_blacklist (token_hash) VALUES (${hash}) ON CONFLICT DO NOTHING`;
+    }
+    return json(res, 200, { message: "Logged out" });
   }
 
   // Parse body

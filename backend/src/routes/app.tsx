@@ -43,6 +43,13 @@ function AppLayout() {
     }
   }, [isAuthenticated, isDemo, navigate, isLoading]);
 
+  // Activation enforcement — authenticated but subscription not active
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && subscription && !subscription.isActive && !subscription.isDemo) {
+      navigate({ to: "/" });
+    }
+  }, [isAuthenticated, isLoading, subscription, navigate]);
+
   // Show loading while session check runs
   if (isLoading) {
     return (
