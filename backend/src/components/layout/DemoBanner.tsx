@@ -74,33 +74,8 @@ export function DemoBanner() {
     <div className="sticky top-0 z-50 flex h-10 w-full items-center justify-between bg-primary px-3 text-sm font-medium text-primary-foreground">
       <div className="w-8 shrink-0" />
       <div className="flex items-center gap-1.5">
-        <span className="hidden sm:inline">Exploring as</span>
-        <span className="sm:hidden">As</span>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 rounded-md border border-primary-foreground/25 bg-primary-foreground/15 px-2 py-0.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-foreground/25"
-            >
-              {currentLabel}
-              <ChevronDown className="h-3 w-3 opacity-70" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="min-w-[120px]">
-            {roles.map((r) => (
-              <DropdownMenuItem
-                key={r.value}
-                onClick={() => setDemoRole(r.value)}
-                className={role === r.value ? "font-semibold" : ""}
-              >
-                {r.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <span className="hidden sm:inline text-primary-foreground/70">
-          · data resets each session
-        </span>
+        <span className="text-primary-foreground/80 text-xs bg-primary-foreground/10 px-2 py-0.5 rounded">DEMO</span>
+        <span className="hidden sm:inline text-primary-foreground/80">· Limited features · data resets each session</span>
       </div>
       <button
         type="button"
