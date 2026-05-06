@@ -101,11 +101,26 @@ function verifyPassword(pw, stored) {
   return createHash("sha256").update(salt + pw).digest("hex") === h;
 }
 
-const SESSIONS = new Map();
+// ─── Stateless Session Tokens ─────────────────────────────
+const SESSION_SECRET = process.env.SESSION_SECRET || "supplyiq-secret";
+
 function createSession(userId, workspaceId, role) {
-  const token = randomBytes(32).toString("hex");
-  SESSIONS.set(token, { userId, workspaceId, role, created: Date.now() });
-  return token;
+  const payload = `${userId}:${workspaceId}:${role}:${Date.now()}`;
+  const sig = createHash("sha256").update(payload + SESSION_SECRET).digest("hex");
+  return Buffer.from(`${payload}:${sig}`).toString("base64url");
+}
+
+function verifySession(token) {
+  try {
+    const decoded = Buffer.from(token, "base64url").toString();
+    const parts = decoded.split(":");
+    if (parts.length < 5) return null;
+    const sig = parts.pop();
+    const payload = parts.join(":");
+    const expected = createHash("sha256").update(payload + SESSION_SECRET).digest("hex");
+    if (sig !== expected) return null;
+    return { userId: parts[0], workspaceId: parts[1], role: parts[2], created: parseInt(parts[3]) };
+  } catch { return null; }
 }
 
 // ─── Static Files ────────────────────────────────────────
@@ -164,8 +179,8 @@ async function handleApiRoute(req, res) {
   if (req.url === "/api/session" && req.method === "GET") {
     const cookie = req.headers.cookie || "";
     const match = cookie.match(/session=([^;]+)/);
-    if (match && SESSIONS.has(match[1])) {
-      const s = SESSIONS.get(match[1]);
+    if (match && verifySession(match[1])) {
+      const s = verifySession(match[1]);
       if (dbConnected) {
         try {
           const [user] = await sql`SELECT * FROM users WHERE id = ${s.userId}::uuid`;
@@ -364,7 +379,7 @@ async function start() {
       // Cross-domain auth: dedicated path to avoid SSR issues
       if (req.url?.startsWith("/auth?s=")) {
         const token = new URL(req.url, "https://h").searchParams.get("s");
-        if (token && SESSIONS.has(token)) {
+        if (token && verifySession(token)) {
           res.writeHead(302, {
             "Location": "/app/dashboard",
             "Set-Cookie": `session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800`,
