@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center">
             <AlertTriangle className="h-10 w-10 text-destructive/70 mb-3" strokeWidth={1.5} />
             <h3 className="text-base font-semibold text-foreground">Something went wrong</h3>
-            {isDev && this.state.error && (
+            {this.state.error && (
               <p className="mt-1 max-w-md text-xs text-destructive font-mono break-all">
                 {this.state.error.message}
               </p>
