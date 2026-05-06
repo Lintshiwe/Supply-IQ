@@ -138,8 +138,8 @@ export function ItemDetailSheet({
               <DetailRow label="Reorder Quantity" value={item.reorderQuantity} />
               <DetailRow label="Preferred Supplier" value={supplier?.name} />
               <DetailRow label="Location" value={location?.name} />
-              <DetailRow label="Cost Per Unit" value={`$${item.costPrice.toFixed(2)}`} mono />
-              <DetailRow label="Sale Price" value={`$${item.sellingPrice.toFixed(2)}`} mono />
+              <DetailRow label="Cost Per Unit" value={`R${item.costPrice.toFixed(2)}`} mono />
+              <DetailRow label="Sale Price" value={`R${item.sellingPrice.toFixed(2)}`} mono />
               <DetailRow label="Description" value={item.description} />
               <DetailRow label="Created" value={format(new Date(item.createdAt), "MMM d, yyyy")} />
               <DetailRow label="Updated" value={format(new Date(item.updatedAt), "MMM d, yyyy")} />

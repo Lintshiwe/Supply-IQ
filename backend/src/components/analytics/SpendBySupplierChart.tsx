@@ -12,7 +12,7 @@ interface Props {
 }
 
 function formatCurrency(v: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v);
+  return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(v);
 }
 
 export function SpendBySupplierChart({ suppliers, purchaseOrders }: Props) {

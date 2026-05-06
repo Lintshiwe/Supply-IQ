@@ -24,7 +24,7 @@ export function StockSummaryCards({ items }: StockSummaryCardsProps) {
         <div className="mt-1 flex items-baseline gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
           <span className="font-mono text-2xl font-bold text-foreground">
-            {metrics.totalValue.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
+            {metrics.totalValue.toLocaleString("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 })}
           </span>
         </div>
       </div>
