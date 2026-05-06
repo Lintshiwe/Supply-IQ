@@ -370,7 +370,7 @@ function LandingPage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate({ to: "/app/dashboard" })}
+              onClick={() => window.open("https://supplyiq.netlify.app/activate", "_self")}
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-semibold hover:bg-muted transition-all"
             >
               Activate License

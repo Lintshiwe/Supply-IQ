@@ -1,8 +1,8 @@
 const { app, BrowserWindow, Menu } = require("electron");
 const path = require("path");
 
-// Use localhost by default, override with SUPPLYIQ_URL env var
-const APP_URL = process.env.SUPPLYIQ_URL || "http://localhost:8082";
+// Use localhost for dev, cloud API for production
+const APP_URL = process.env.SUPPLYIQ_URL || "https://supplyiq-api.onrender.com";
 
 // Set app name for Windows taskbar / macOS dock
 // Disable sandbox + GPU + shm for localhost dev
