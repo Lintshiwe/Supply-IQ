@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [workspace, setWorkspace] = useState<AuthWorkspace | null>(null);
   const [subscription, setSubscription] = useState<AuthSubscription | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Start loading until session check
+  const [isLoading, setIsLoading] = useState(false); // Start false for SSR match
   const [sessionChecked, setSessionChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

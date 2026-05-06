@@ -25,6 +25,9 @@ function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useKeyboardShortcuts({ onHelpOpen: () => setHelpOpen(true) });
 
@@ -38,37 +41,26 @@ function AppLayout() {
 
   // Auth guard — redirect to landing if not authenticated and not in demo
   useEffect(() => {
-    if (!isAuthenticated && !isDemo && !isLoading) {
+    if (!isAuthenticated && !isDemo && mounted && !isLoading) {
       navigate({ to: "/" });
     }
-  }, [isAuthenticated, isDemo, navigate, isLoading]);
+  }, [isAuthenticated, isDemo, navigate, isLoading, mounted]);
 
-  // Activation enforcement — authenticated but subscription not active
+  // Activation enforcement
   useEffect(() => {
-    if (isAuthenticated && !isLoading && subscription && !subscription.isActive && !subscription.isDemo) {
+    if (isAuthenticated && mounted && !isLoading && subscription && !subscription.isActive && !subscription.isDemo) {
       navigate({ to: "/" });
     }
-  }, [isAuthenticated, isLoading, subscription, navigate]);
+  }, [isAuthenticated, isLoading, subscription, navigate, mounted]);
 
-  // Show loading while session check runs
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading SupplyIQ...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Subscription check — redirect to subscribe if expired and not demo
+  // Subscription check
   useEffect(() => {
     if (isAuthenticated && !isDemo && subscription?.isExpired) {
       window.location.href = "/subscribe";
     }
   }, [isAuthenticated, isDemo, subscription?.isExpired]);
 
+  // Always render app shell — prevents hydration mismatch (React #310)
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
       <DemoBanner />
@@ -79,11 +71,20 @@ function AppLayout() {
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
           <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-8 md:pb-8">
-            <AnimatePresence mode="wait">
-              <PageTransition routeKey={location.pathname}>
-                <Outlet />
-              </PageTransition>
-            </AnimatePresence>
+            {(!mounted || isLoading) ? (
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center space-y-4">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground mx-auto" />
+                  <p className="text-sm text-muted-foreground">Loading SupplyIQ...</p>
+                </div>
+              </div>
+            ) : (
+              <AnimatePresence mode="wait">
+                <PageTransition routeKey={location.pathname}>
+                  <Outlet />
+                </PageTransition>
+              </AnimatePresence>
+            )}
           </main>
         </div>
       </div>
