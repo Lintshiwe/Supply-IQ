@@ -45,13 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [workspace, setWorkspace] = useState<AuthWorkspace | null>(null);
   const [subscription, setSubscription] = useState<AuthSubscription | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start loading until session check
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const clearError = useCallback(() => setError(null), []);
 
   // Auto-check session on mount
   useEffect(() => {
+    setIsLoading(true);
     fetch("/api/session")
       .then(r => r.json())
       .then(data => {
@@ -61,7 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSubscription(data.subscription);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        setIsLoading(false);
+        setSessionChecked(true);
+      });
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {

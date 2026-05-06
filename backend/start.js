@@ -349,8 +349,49 @@ async function handleApiRoute(req, res) {
     }
 
     // Devices
-    if (req.url === "/api/request-key" && req.method === "GET") {
+    if (req.url === "/api/devices" && req.method === "GET") {
       return json(res, 200, { devices: [], maxDevices: 1 });
+    }
+
+    // Forgot password — generate reset token and email
+    if (req.url === "/api/forgot-password" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "Database not connected" });
+      const { email } = body;
+      const [user] = email ? await sql`SELECT * FROM users WHERE email = ${email.toLowerCase()}` : [null];
+      if (user) {
+        const resetToken = randomBytes(32).toString("hex");
+        const expires = new Date(Date.now() + 3600000); // 1 hour
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires TIMESTAMPTZ`;
+        await sql`UPDATE users SET reset_token = ${resetToken}, reset_expires = ${expires.toISOString()} WHERE id = ${user.id}`;
+
+        // Try to send email
+        try {
+          const nodemailer = require("nodemailer");
+          const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST || "smtp.gmail.com",
+            port: parseInt(process.env.SMTP_PORT || "587"), secure: false,
+            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+          });
+          await transporter.sendMail({
+            from: `"SupplyIQ" <${process.env.SMTP_USER}>`, to: user.email,
+            subject: "Reset your SupplyIQ password",
+            html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto"><h1>Supply<span style="color:#84cc16">IQ</span></h1><p>Click below to reset your password:</p><a href="https://supplyiq.netlify.app/reset-password?token=${resetToken}" style="display:inline-block;background:#84cc16;color:#0f172a;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Reset Password</a><p style="color:#94a3b8;font-size:12px">Link expires in 1 hour.</p></div>`,
+          });
+          console.log("[EMAIL] Reset link sent to", user.email);
+        } catch (e) { console.warn("Email not sent:", e.message); }
+      }
+      return json(res, 200, { message: "If the email exists, a reset link has been sent." });
+    }
+
+    // Reset password
+    if (req.url === "/api/reset-password" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "Database not connected" });
+      const { token, password } = body;
+      const [user] = token ? await sql`SELECT * FROM users WHERE reset_token = ${token} AND reset_expires > now()` : [null];
+      if (!user) return json(res, 400, { error: "Invalid or expired reset token" });
+      await sql`UPDATE users SET password_hash = ${hashPassword(password)}, reset_token = NULL, reset_expires = NULL WHERE id = ${user.id}`;
+      return json(res, 200, { message: "Password reset successfully." });
     }
 
     return json(res, 404, { error: "Unknown endpoint" });

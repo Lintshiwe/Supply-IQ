@@ -21,7 +21,7 @@ export const Route = createFileRoute("/app")({
 function AppLayout() {
   const { isDemo } = useDemo();
   const { role } = useRole();
-  const { isAuthenticated, subscription, logout } = useAuth();
+  const { isAuthenticated, isLoading, subscription, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
@@ -38,7 +38,19 @@ function AppLayout() {
 
   // Auth guard — redirect to landing if not authenticated and not in demo
   useEffect(() => {
-    if (!isAuthenticated && !isDemo) {
+  // Show loading while session check runs
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground mx-auto" />
+          <p className="text-sm text-muted-foreground">Loading SupplyIQ...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated && !isDemo) {
       navigate({ to: "/" });
     }
   }, [isAuthenticated, isDemo, navigate]);
