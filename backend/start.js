@@ -361,18 +361,20 @@ async function start() {
     if (!handler || typeof handler !== "function") throw new Error("No handler");
 
     const server = createServer(async (req, res) => {
-      // Cross-domain auth: accept session token in URL, set cookie, redirect
-      if (req.url?.includes("?s=")) {
+      // Cross-domain auth: dedicated path to avoid SSR issues
+      if (req.url?.startsWith("/auth?s=")) {
         const token = new URL(req.url, "https://h").searchParams.get("s");
         if (token && SESSIONS.has(token)) {
-          const clean = req.url.replace(/[?&]s=[^&]+(&?)/, (_, amp) => amp || "").replace(/[?&]$/, "");
           res.writeHead(302, {
-            "Location": clean || "/app/dashboard",
+            "Location": "/app/dashboard",
             "Set-Cookie": `session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800`,
           });
           res.end();
           return;
         }
+        res.writeHead(302, { "Location": "/" });
+        res.end();
+        return;
       }
 
       if (req.url?.startsWith("/api/")) return handleApiRoute(req, res);
