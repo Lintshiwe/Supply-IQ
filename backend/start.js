@@ -166,11 +166,33 @@ async function handleApiRoute(req, res) {
     const match = cookie.match(/session=([^;]+)/);
     if (match && SESSIONS.has(match[1])) {
       const s = SESSIONS.get(match[1]);
+      if (dbConnected) {
+        try {
+          const [user] = await sql`SELECT * FROM users WHERE id = ${s.userId}::uuid`;
+          const [ws] = await sql`SELECT * FROM workspaces WHERE id = ${s.workspaceId}::uuid`;
+          const [sub] = await sql`SELECT * FROM subscriptions WHERE workspace_id = ${s.workspaceId}::uuid`;
+          if (user) {
+            return json(res, 200, {
+              authenticated: true,
+              user: { id: user.id, email: user.email, name: user.name, role: user.role },
+              workspace: ws ? { id: ws.id, name: ws.name } : { id: s.workspaceId, name: "Workspace" },
+              subscription: sub ? {
+                tier: sub.tier, status: sub.status,
+                isActive: sub.status === "active" && new Date(sub.expires_at) > new Date(),
+                isDemo: sub.tier === "demo" || sub.status === "demo",
+                isExpired: sub.status !== "active" && new Date(sub.expires_at) < new Date(),
+                expiresAt: sub.expires_at?.toISOString(), maxDevices: sub.max_devices || 1,
+              } : { tier: "demo", status: "demo", isActive: false, isDemo: true, isExpired: false, maxDevices: 1 },
+            });
+          }
+        } catch (e) { console.warn("Session DB query failed:", e.message); }
+      }
+      // Fallback for demo or DB not available
       return json(res, 200, {
         authenticated: true,
         user: { id: s.userId, email: "", name: "User", role: s.role },
         workspace: { id: s.workspaceId, name: "Workspace" },
-        subscription: { tier: "active", status: "active", isActive: true, isDemo: false, isExpired: false, expiresAt: null, maxDevices: 1 },
+        subscription: { tier: "active", status: "active", isActive: true, isDemo: false, isExpired: false, maxDevices: 1 },
       });
     }
     return json(res, 200, { authenticated: false, user: null });

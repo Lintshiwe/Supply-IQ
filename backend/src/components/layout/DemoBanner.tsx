@@ -18,13 +18,19 @@ const roles: { value: UserRoleType; label: string }[] = [
 ];
 
 export function DemoBanner() {
-  const { isDemo } = useDemo();
+  const { isDemo, exitDemoMode } = useDemo();
   const { role, setDemoRole } = useRole();
   const { isAuthenticated, subscription } = useAuth();
   const [dismissed, setDismissed] = useState(false);
 
-  // Show subscription trial banner for authenticated but not activated users
-  if (isAuthenticated && !subscription?.isActive && !isDemo) {
+  // If authenticated, exit demo mode and don't show demo banner
+  if (isAuthenticated && isDemo) {
+    exitDemoMode();
+    return null;
+  }
+
+  // Show subscription trial banner for authenticated but not active users
+  if (isAuthenticated && subscription && !subscription.isActive && !subscription.isExpired) {
     if (dismissed) return null;
     const daysLeft = subscription?.expiresAt
       ? Math.max(0, Math.ceil((new Date(subscription.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
