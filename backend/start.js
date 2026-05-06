@@ -365,9 +365,9 @@ async function start() {
       if (req.url?.includes("?s=")) {
         const token = new URL(req.url, "https://h").searchParams.get("s");
         if (token && SESSIONS.has(token)) {
-          const clean = req.url.replace(/[?&]s=[^&]+/, "").replace(/^\/(\?)?/, "/app/dashboard");
+          const clean = req.url.replace(/[?&]s=[^&]+(&?)/, (_, amp) => amp || "").replace(/[?&]$/, "");
           res.writeHead(302, {
-            "Location": clean,
+            "Location": clean || "/app/dashboard",
             "Set-Cookie": `session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800`,
           });
           res.end();
