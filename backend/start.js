@@ -126,19 +126,43 @@ function verifySession(token) {
 // ─── Email ───────────────────────────────────────────────
 let _nodemailer = null;
 async function sendEmail(to, subject, html, text) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return false;
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log("[EMAIL] Skipped — no SMTP credentials configured");
+    return false;
+  }
   try {
-    if (!_nodemailer) _nodemailer = (await import("nodemailer")).default;
-    console.log("[EMAIL] Attempting send to", to, "via", process.env.SMTP_HOST);
+    if (!_nodemailer) {
+      try {
+        _nodemailer = (await import("nodemailer")).default;
+        console.log("[EMAIL] nodemailer loaded");
+      } catch (e) {
+        console.error("[EMAIL] Failed to load nodemailer:", e.message);
+        return false;
+      }
+    }
     const transporter = _nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: parseInt(process.env.SMTP_PORT || "587"), secure: false,
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: false,
+      requireTLS: true,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     });
-    await transporter.sendMail({ from: `\"SupplyIQ\" <${process.env.SMTP_USER}>`, to, subject, html, text });
-    console.log("[EMAIL] Sent to", to);
+    console.log("[EMAIL] Connecting to SMTP...");
+    await transporter.verify();
+    console.log("[EMAIL] SMTP connection verified");
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to,
+      subject,
+      html: html || text,
+      text: text || "",
+    });
+    console.log("[EMAIL] Sent successfully to", to);
     return true;
-  } catch (e) { console.warn("[EMAIL] Failed:", e.message); return false; }
+  } catch (e) {
+    console.error("[EMAIL] Error:", e.code || e.message, e.response || "");
+    return false;
+  }
 }
 
 // ─── Static Files ────────────────────────────────────────
