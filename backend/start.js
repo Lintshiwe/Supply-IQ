@@ -126,8 +126,9 @@ function verifySession(token) {
 // ─── Email ───────────────────────────────────────────────
 let _nodemailer = null;
 async function sendEmail(to, subject, html, text) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return false;
   try {
-    if (!_nodemailer) _nodemailer = require("nodemailer");
+    if (!_nodemailer) _nodemailer = (await import("nodemailer")).default;
     const transporter = _nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.gmail.com",
       port: parseInt(process.env.SMTP_PORT || "587"), secure: false,
@@ -185,6 +186,13 @@ async function handleApiRoute(req, res) {
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
+
+  if (req.url === "/api/test-email" && req.method === "GET") {
+    const sent = await sendEmail("ntoanpilp@gmail.com", "SupplyIQ Email Test",
+      "<h1>SupplyIQ</h1><p>Email service is working.</p>",
+      "SupplyIQ email test successful.");
+    return json(res, 200, { emailSent: sent, smtpConfigured: !!(process.env.SMTP_USER && process.env.SMTP_PASS) });
+  }
 
   if (req.url === "/api/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
