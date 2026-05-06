@@ -47,13 +47,16 @@ export function Header() {
   
   const { exitDemoMode } = useDemo();
   const { role } = useRole();
+  const { isAuthenticated, user, subscription, logout } = useAuth();
   const navigate = useNavigate();
 
-  const displayName = "Demo Admin";
+  const displayName = isAuthenticated && user ? user.name : "Demo User";
+  const displayEmail = isAuthenticated && user ? user.email : "";
 
-  const handleExit = async () => {
-    await navigate({ to: "/" });
+  const handleLogout = async () => {
+    await logout();
     exitDemoMode();
+    navigate({ to: "/" });
   };
 
   // CMD+K / Ctrl+K shortcut
@@ -104,21 +107,29 @@ export function Header() {
             <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground md:inline-block" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel className="flex items-center justify-between font-normal text-xs text-muted-foreground">
-            {displayName}
-            <Badge variant="outline" className={`ml-2 text-[10px] font-semibold uppercase ${ROLE_BADGE_STYLES[role]}`}>
-              {ROLE_LABELS[role]}
-            </Badge>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+            <div className="font-medium text-foreground text-sm">{displayName}</div>
+            {isAuthenticated && displayEmail && <div className="text-xs mt-0.5">{displayEmail}</div>}
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="outline" className={`text-[10px] font-semibold uppercase ${ROLE_BADGE_STYLES[role]}`}>
+                {ROLE_LABELS[role]}
+              </Badge>
+              {subscription && (
+                <Badge variant="outline" className={`text-[10px] ${subscription.isActive ? "bg-accent/10 text-accent border-accent/20" : "bg-muted text-muted-foreground"}`}>
+                  {subscription.isActive ? subscription.tier.toUpperCase() : subscription.isDemo ? "DEMO" : "EXPIRED"}
+                </Badge>
+              )}
+            </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => navigate({ to: "/app/settings" })}>
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleExit}>
+          <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
-            Exit demo
+            {isAuthenticated ? "Sign Out" : "Exit Demo"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

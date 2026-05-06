@@ -184,7 +184,7 @@ function StickyNav({ onTryDemo }: { onTryDemo: () => void }) {
         </a>
 
         {/* Desktop nav links */}
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-6 md:flex">
           {navLinks.map((l) => (
             <a
               key={l.label}
@@ -198,16 +198,25 @@ function StickyNav({ onTryDemo }: { onTryDemo: () => void }) {
               {l.label}
             </a>
           ))}
+          <a href="https://supplyiq.netlify.app/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Sign In</a>
         </div>
 
-        {/* Desktop CTA - secondary style */}
-        <button
-          type="button"
-          onClick={onTryDemo}
-          className="hidden items-center gap-2 rounded-lg border border-border bg-muted/60 px-5 py-2 text-sm font-medium text-foreground transition-all hover:bg-muted md:inline-flex"
-        >
-          Try demo
-        </button>
+        {/* Desktop CTAs */}
+        <div className="hidden items-center gap-2 md:flex">
+          <a
+            href="https://supplyiq.netlify.app/register"
+            className="rounded-lg border border-border bg-muted/60 px-4 py-2 text-sm font-medium text-foreground transition-all hover:bg-muted"
+          >
+            Sign Up
+          </a>
+          <button
+            type="button"
+            onClick={onTryDemo}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90"
+          >
+            Try demo
+          </button>
+        </div>
 
         {/* Mobile hamburger */}
         <button
@@ -368,13 +377,18 @@ function LandingPage() {
               Try demo
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
-            <button
-              type="button"
-              onClick={() => window.open("https://supplyiq.netlify.app/activate", "_self")}
+            <a
+              href="https://supplyiq.netlify.app/login"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-semibold hover:bg-muted transition-all"
             >
-              Activate License
-            </button>
+              Sign In
+            </a>
+            <a
+              href="https://supplyiq.netlify.app/register"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-5 py-2.5 text-base font-semibold hover:bg-muted transition-all"
+            >
+              Sign Up
+            </a>
           </div>
         </div>
       </section>

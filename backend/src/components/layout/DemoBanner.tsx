@@ -1,35 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDemo } from "@/hooks/useDemo";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
-import { X, ChevronDown } from "lucide-react";
-import type { UserRoleType } from "@/lib/roles";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-const roles: { value: UserRoleType; label: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "manager", label: "Manager" },
-  { value: "requestor", label: "Requestor" },
-];
+import { X } from "lucide-react";
 
 export function DemoBanner() {
   const { isDemo, exitDemoMode } = useDemo();
-  const { role, setDemoRole } = useRole();
+  const { role } = useRole();
   const { isAuthenticated, subscription } = useAuth();
   const [dismissed, setDismissed] = useState(false);
 
-  // If authenticated, exit demo mode and don't show demo banner
-  if (isAuthenticated && isDemo) {
-    exitDemoMode();
-    return null;
-  }
+  // Auto-exit demo when authenticated
+  useEffect(() => {
+    if (isAuthenticated && isDemo) {
+      exitDemoMode();
+    }
+  }, [isAuthenticated, isDemo, exitDemoMode]);
 
-  // Show subscription trial banner for authenticated but not active users
+  // Show subscription trial banner for authenticated but not active
   if (isAuthenticated && subscription && !subscription.isActive && !subscription.isExpired) {
     if (dismissed) return null;
     const daysLeft = subscription?.expiresAt
