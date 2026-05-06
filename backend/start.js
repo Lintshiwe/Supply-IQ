@@ -232,7 +232,7 @@ async function handleApiRoute(req, res) {
       if (!dbConnected) return json(res, 503, { error: "Database not connected" });
       const { activationKey, workspaceId } = body;
       const keyHash = createHash("sha256").update(activationKey).digest("hex");
-      const [key] = await sql`SELECT * FROM activation_keys WHERE key_hash = ${keyHash} AND workspace_id = ${workspaceId} AND is_used = false`;
+      const [key] = await sql`SELECT * FROM activation_keys WHERE key_hash = ${keyHash} AND workspace_id = ${workspaceId}::uuid AND is_used = false`;
       if (!key) return json(res, 400, { error: "Invalid activation key" });
       if (new Date(key.expires_at) < new Date()) return json(res, 400, { error: "Key expired" });
 
@@ -240,11 +240,25 @@ async function handleApiRoute(req, res) {
       const days = durations[key.tier] || 365;
       const now = new Date();
       const exp = new Date(now.getTime() + days * 86400000);
+      const maxDev = { "1yr": 2, "3yr": 5, "5yr": 10, "7yr": 20 }[key.tier] || 1;
 
       await sql`UPDATE activation_keys SET is_used = true WHERE id = ${key.id}`;
-      await sql`UPDATE subscriptions SET tier = ${key.tier}, status = 'active', starts_at = ${now.toISOString()}, expires_at = ${exp.toISOString()}, max_devices = ${[1,2,5,10,20][["demo","1yr","3yr","5yr","7yr"].indexOf(key.tier)] || 1} WHERE workspace_id = ${workspaceId}`;
+      await sql`UPDATE subscriptions SET tier = ${key.tier}, status = 'active', starts_at = ${now.toISOString()}, expires_at = ${exp.toISOString()}, max_devices = ${maxDev} WHERE workspace_id = ${workspaceId}`;
       await sql`UPDATE workspaces SET is_demo = false WHERE id = ${workspaceId}`;
-      return json(res, 200, { tier: key.tier, status: "active", isActive: true, isDemo: false, isExpired: false, expiresAt: exp.toISOString() });
+
+      // Create a session so user can access dashboard
+      const [user] = await sql`SELECT * FROM users WHERE workspace_id = ${workspaceId} AND is_owner = true`;
+      let sessionCookie = "";
+      if (user) {
+        const token = createSession(user.id, workspaceId, user.role);
+        sessionCookie = `session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800`;
+      }
+
+      return json(res, 200, {
+        tier: key.tier, status: "active", isActive: true, isDemo: false, isExpired: false,
+        expiresAt: exp.toISOString(), maxDevices: maxDev,
+        sessionCookie,
+      });
     }
 
     // Request activation key
