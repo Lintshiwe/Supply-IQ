@@ -160,6 +160,22 @@ async function handleApiRoute(req, res) {
     return res.end(JSON.stringify({ status: "healthy", version: "1.0.5", db: dbConnected }));
   }
 
+  // Session check — returns current user from cookie
+  if (req.url === "/api/session" && req.method === "GET") {
+    const cookie = req.headers.cookie || "";
+    const match = cookie.match(/session=([^;]+)/);
+    if (match && SESSIONS.has(match[1])) {
+      const s = SESSIONS.get(match[1]);
+      return json(res, 200, {
+        authenticated: true,
+        user: { id: s.userId, email: "", name: "User", role: s.role },
+        workspace: { id: s.workspaceId, name: "Workspace" },
+        subscription: { tier: "active", status: "active", isActive: true, isDemo: false, isExpired: false, expiresAt: null, maxDevices: 1 },
+      });
+    }
+    return json(res, 200, { authenticated: false, user: null });
+  }
+
   // Parse body
   let body = {};
   if (req.method === "POST") {

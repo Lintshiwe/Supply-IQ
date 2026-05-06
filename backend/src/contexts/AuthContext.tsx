@@ -50,6 +50,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearError = useCallback(() => setError(null), []);
 
+  // Auto-check session on mount
+  useEffect(() => {
+    fetch("/api/session")
+      .then(r => r.json())
+      .then(data => {
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+          setWorkspace(data.workspace);
+          setSubscription(data.subscription);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
