@@ -38,6 +38,11 @@ function AppLayout() {
 
   // Auth guard — redirect to landing if not authenticated and not in demo
   useEffect(() => {
+    if (!isAuthenticated && !isDemo && !isLoading) {
+      navigate({ to: "/" });
+    }
+  }, [isAuthenticated, isDemo, navigate, isLoading]);
+
   // Show loading while session check runs
   if (isLoading) {
     return (
@@ -50,31 +55,12 @@ function AppLayout() {
     );
   }
 
-  if (!isAuthenticated && !isDemo) {
-      navigate({ to: "/" });
-    }
-  }, [isAuthenticated, isDemo, navigate]);
-
   // Subscription check — redirect to subscribe if expired and not demo
   useEffect(() => {
     if (isAuthenticated && !isDemo && subscription?.isExpired) {
       window.location.href = "/subscribe";
     }
   }, [isAuthenticated, isDemo, subscription?.isExpired]);
-
-  if (!isAuthenticated && !isDemo) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading SupplyIQ...</p>
-          <a href="/" className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition-all">
-            Enter Demo
-          </a>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">

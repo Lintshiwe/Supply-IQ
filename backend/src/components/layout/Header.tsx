@@ -24,6 +24,7 @@ import { CommandPalette } from "@/components/command/CommandPalette";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { useDemo } from "@/hooks/useDemo";
 import { useRole } from "@/hooks/useRole";
+import { useAuth } from "@/hooks/useAuth";
 import { PermissionGate } from "@/hooks/usePermissions";
 
 const ROLE_BADGE_STYLES: Record<string, string> = {
