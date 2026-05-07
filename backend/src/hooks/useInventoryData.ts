@@ -9,6 +9,20 @@ import type { ItemFilters, StockSummary } from "@/lib/demo-store";
 
 interface QueryResult<T> { data: T; isLoading: boolean; error: Error | null; }
 
+// Convert snake_case keys to camelCase recursively
+function toCamelCase(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(toCamelCase);
+  if (obj !== null && typeof obj === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      const camelKey = key.replace(/_([a-z])/g, (_, c) => (c as string).toUpperCase());
+      result[camelKey] = toCamelCase(value);
+    }
+    return result;
+  }
+  return obj;
+}
+
 // Fetch helper for authenticated API calls
 function useApi<T>(url: string, defaultValue: T): QueryResult<T> {
   const { isAuthenticated } = useAuth();
@@ -21,11 +35,13 @@ function useApi<T>(url: string, defaultValue: T): QueryResult<T> {
     fetch(url)
       .then(r => r.json())
       .then(d => {
+        // Normalize snake_case to camelCase from production server
+        const normalized = toCamelCase(d);
         // Guard: if defaultValue is an array, ensure response is also an array
-        if (Array.isArray(defaultValue) && !Array.isArray(d)) {
+        if (Array.isArray(defaultValue) && !Array.isArray(normalized)) {
           setData(defaultValue);
         } else {
-          setData(d);
+          setData(normalized as T);
         }
         setLoading(false);
       })

@@ -77,7 +77,11 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
       try {
         const res = await fetch(`/api/items/lookup?barcode=${encodeURIComponent(query)}`);
         if (res.ok) {
-          const item = await res.json();
+          const raw = await res.json();
+          // Normalize snake_case to camelCase from production server
+          const item = Object.fromEntries(
+            Object.entries(raw).map(([k, v]) => [k.replace(/_([a-z])/g, (_, c) => c.toUpperCase()), v])
+          );
           setFoundItem(item);
           setIsLookingUp(false);
           return;
