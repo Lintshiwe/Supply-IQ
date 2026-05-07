@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SupplyIQ Scanner</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.card{background:#1e293b;border-radius:16px;padding:24px;width:100%;max-width:400px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,.4)}
+.icon{font-size:48px;margin-bottom:12px}
+h1{font-size:18px;font-weight:600;margin-bottom:4px}
+.sku{font-family:monospace;font-size:13px;color:#94a3b8;margin-bottom:16px}
+.stock{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:14px;font-weight:600;margin-bottom:20px}
+.in-stock{background:#065f46;color:#6ee7b7}
+.low-stock{background:#78350f;color:#fbbf24}
+.out-stock{background:#7f1d1d;color:#fca5a5}
+.input-wrap{margin-bottom:16px}
+input{width:100%;padding:14px;border-radius:12px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;font-size:18px;text-align:center;font-family:monospace;outline:none}
+input:focus{border-color:#84cc16}
+.btn{width:100%;padding:14px;border-radius:12px;border:none;background:#84cc16;color:#0f172a;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s}
+.btn:hover{opacity:.9}
+.btn:disabled{opacity:.5}
+.error{background:#7f1d1d;border-radius:12px;padding:16px;margin-bottom:16px}
+.error h2{font-size:16px;color:#fca5a5;margin-bottom:4px}
+.error p{font-size:13px;color:#fca5a5;opacity:.8}
+.loading{font-size:14px;color:#94a3b8;padding:20px}
+.barcode{font-family:monospace;font-size:13px;color:#64748b;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="card" id="app">
+  <div class="icon">📦</div>
+  <h1>SupplyIQ Scanner</h1>
+  <p style="font-size:13px;color:#64748b;margin-bottom:20px">Scan a barcode or QR code to look up inventory</p>
+  <div class="input-wrap">
+    <input type="text" id="barcode" placeholder="Scan or type barcode..." autofocus autocomplete="off">
+  </div>
+  <button class="btn" id="lookup" onclick="lookup()">Look Up</button>
+  <div id="result"></div>
+</div>
+
+<script>
+const API = '/api/scan';
+
+async function lookup() {
+  const barcode = document.getElementById('barcode').value.trim();
+  if (!barcode) return;
+  
+  const btn = document.getElementById('lookup');
+  const result = document.getElementById('result');
+  btn.disabled = true;
+  btn.textContent = 'Looking up...';
+  result.innerHTML = '<div class="loading">Searching...</div>';
+
+  try {
+    const res = await fetch(`${API}?barcode=${encodeURIComponent(barcode)}`);
+    const data = await res.json();
+    
+    if (!res.ok) {
+      result.innerHTML = `<div class="error">
+        <h2>Not Found</h2>
+        <p>No item found for: <strong>${barcode}</strong></p>
+        <p style="font-size:12px;margin-top:4px">Make sure items are imported to the catalog first.</p>
+      </div>`;
+    } else {
+      let stockClass = data.stock === 0 ? 'out-stock' : data.stock <= 10 ? 'low-stock' : 'in-stock';
+      let stockLabel = data.stock === 0 ? 'Out of Stock' : data.stock <= 10 ? 'Low Stock' : 'In Stock';
+      result.innerHTML = `
+        <div class="barcode">${data.barcode || ''}</div>
+        <h1>${data.name}</h1>
+        <div class="sku">SKU: ${data.sku}</div>
+        <div class="stock ${stockClass}">${stockLabel}: ${data.stock} ${data.unit || 'ea'}</div>
+      `;
+    }
+  } catch (e) {
+    result.innerHTML = `<div class="error">
+      <h2>Connection Error</h2>
+      <p>Could not reach the server. Check your connection.</p>
+    </div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Look Up';
+  }
+}
+
+document.getElementById('barcode').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') lookup();
+});
+
+// Auto-lookup if barcode in URL
+const params = new URLSearchParams(window.location.search);
+const barcodeParam = params.get('barcode');
+if (barcodeParam) {
+  document.getElementById('barcode').value = barcodeParam;
+  lookup();
+}
+</script>
+</body>
+</html>
