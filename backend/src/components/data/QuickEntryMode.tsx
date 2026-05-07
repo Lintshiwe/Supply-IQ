@@ -79,10 +79,13 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
         if (res.ok) {
           const raw = await res.json();
           // Normalize snake_case to camelCase from production server
-          const item = Object.fromEntries(
-            Object.entries(raw).map(([k, v]) => [k.replace(/_([a-z])/g, (_, c) => c.toUpperCase()), v])
-          );
-          setFoundItem(item);
+          const numericFields = ["currentStock","reorderPoint","reorderQuantity","costPrice","sellingPrice"];
+          const item: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(raw)) {
+            const camelKey = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+            item[camelKey] = numericFields.includes(camelKey) && typeof v === "string" ? Number(v) : v;
+          }
+          setFoundItem(item as Item);
           setIsLookingUp(false);
           return;
         }

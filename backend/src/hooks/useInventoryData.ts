@@ -9,14 +9,24 @@ import type { ItemFilters, StockSummary } from "@/lib/demo-store";
 
 interface QueryResult<T> { data: T; isLoading: boolean; error: Error | null; }
 
-// Convert snake_case keys to camelCase recursively
+// Convert snake_case keys to camelCase, and coerce numeric string values to numbers
+const NUMERIC_FIELDS = new Set([
+  "currentStock", "reorderPoint", "reorderQuantity",
+  "costPrice", "sellingPrice", "quantity", "totalCost",
+  "leadTimeDays", "rating", "maxDevices",
+]);
+
 function toCamelCase(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(toCamelCase);
   if (obj !== null && typeof obj === "object") {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const camelKey = key.replace(/_([a-z])/g, (_, c) => (c as string).toUpperCase());
-      result[camelKey] = toCamelCase(value);
+      const camelValue = toCamelCase(value);
+      // Coerce numeric strings to actual numbers for known numeric fields
+      result[camelKey] = NUMERIC_FIELDS.has(camelKey) && typeof camelValue === "string"
+        ? Number(camelValue)
+        : camelValue;
     }
     return result;
   }
