@@ -7,6 +7,7 @@ import { MovementsFilters } from "@/components/movements/MovementsFilters";
 import { MovementStats } from "@/components/movements/MovementStats";
 import { MovementFormSheet } from "@/components/movements/MovementFormSheet";
 import { CSVExportButton, type CSVColumn } from "@/components/data/CSVExportButton";
+import { ScanButton } from "@/components/data/ScanButton";
 import { EMPTY_MOVEMENT_FILTERS } from "@/components/movements/movement-filter-types";
 import type { MovementFilters } from "@/components/movements/movement-filter-types";
 import { useMovements, useItems, useLocations } from "@/hooks/useInventoryData";
@@ -45,6 +46,7 @@ function MovementsPage() {
   const { item: itemParam } = Route.useSearch();
   const [filters, setFilters] = useState<MovementFilters>(EMPTY_MOVEMENT_FILTERS);
   const [formOpen, setFormOpen] = useState(false);
+  const [preSelectedItem, setPreSelectedItem] = useState<string | null>(null);
   const { data: movements } = useMovements();
   const { data: items } = useItems();
   const { data: locations } = useLocations();
@@ -92,6 +94,10 @@ function MovementsPage() {
           <p className="text-sm text-muted-foreground">{filtered.length} movements</p>
         </div>
         <div className="flex items-center gap-2">
+          <ScanButton
+            onItemFound={(item) => { setPreSelectedItem(item.id); setFormOpen(true); }}
+            size="sm"
+          />
           <CSVExportButton
             data={filtered}
             columns={movementCsvColumns}
@@ -132,9 +138,10 @@ function MovementsPage() {
 
       <MovementFormSheet
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(v) => { setFormOpen(v); if (!v) setPreSelectedItem(null); }}
         items={items}
         locations={locations}
+        preSelectedItemId={preSelectedItem}
       />
     </div>
   );

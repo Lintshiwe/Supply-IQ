@@ -25,6 +25,7 @@ import { ItemDetailSheet } from "@/components/catalog/ItemDetailSheet";
 import { RowActionsMenu } from "@/components/catalog/RowActionsMenu";
 import { MovementFormSheet } from "@/components/movements/MovementFormSheet";
 import { printBarcodeLabels } from "@/components/catalog/PrintBarcodeLabel";
+import { ScanButton } from "@/components/data/ScanButton";
 import { useItems, useCategories, useSuppliers, useLocations } from "@/hooks/useInventoryData";
 import { useCreateItem, useUpdateItem, useDeleteItem } from "@/hooks/useInventoryMutations";
 import { PermissionGate, usePermissions } from "@/hooks/usePermissions";
@@ -224,6 +225,10 @@ function CatalogPage() {
           <p className="text-sm text-muted-foreground">{items.length} items</p>
         </div>
         <div className="flex items-center gap-2" data-tour="catalog-actions">
+          <ScanButton
+            onItemFound={(item) => setFilters((prev) => ({ ...prev, search: item.sku }))}
+            size="sm"
+          />
           <CSVExportButton
             data={items}
             columns={csvColumns}

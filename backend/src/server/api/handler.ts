@@ -297,5 +297,15 @@ async function routeApiRequest(
     return handleHealthCheck();
   }
 
+  // Scan log endpoints (mobile scanner)
+  if (path === "/api/scan-log" && method === "POST") {
+    const { handleCreateScanLog } = await import("./scan-logs");
+    return handleCreateScanLog({ ...body, workspaceId: wsId || body.workspaceId } as any);
+  }
+  if (path === "/api/scan-logs" && method === "GET") {
+    const { handleGetScanLogs } = await import("./scan-logs");
+    return handleGetScanLogs(wsId || body.workspaceId as string, 50);
+  }
+
   throw new Error(`Unknown API endpoint: ${method} ${path}`);
 }

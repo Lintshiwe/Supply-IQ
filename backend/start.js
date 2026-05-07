@@ -637,6 +637,21 @@ async function handleApiRoute(req, res) {
         RETURNING *`;
       return json(res, 201, s);
     }
+    if (req.url === "/api/suppliers/update" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { id, updates } = body;
+      const [s] = await sql`UPDATE suppliers SET ${sql(Object.entries(updates).map(([k,v]) => sql`${sql(k)} = ${v}`))}, updated_at = now() WHERE id = ${id}::uuid AND workspace_id = ${wsId}::uuid RETURNING *`;
+      return json(res, 200, s);
+    }
+    if (req.url === "/api/suppliers/delete" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      await sql`DELETE FROM suppliers WHERE id = ${body.id}::uuid AND workspace_id = ${wsId}::uuid`;
+      return json(res, 200, { success: true });
+    }
 
     // ─── CRUD: Purchase Orders ──────────────────────────
     if (req.url === "/api/purchase-orders" && req.method === "GET") {
@@ -645,6 +660,32 @@ async function handleApiRoute(req, res) {
       const result = wsId ? await sql`SELECT * FROM purchase_orders WHERE workspace_id = ${wsId}::uuid ORDER BY created_at DESC` : [];
       return json(res, 200, result);
     }
+    if (req.url === "/api/purchase-orders" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { orderNumber, supplierId, status, items, totalCost, expectedDelivery, notes, createdBy } = body;
+      const [po] = await sql`
+        INSERT INTO purchase_orders (workspace_id, order_number, supplier_id, status, items, total_cost, expected_delivery, notes, created_by)
+        VALUES (${wsId}::uuid, ${orderNumber}, ${supplierId}::uuid, ${status || "draft"}, ${JSON.stringify(items || [])}, ${totalCost || 0}, ${expectedDelivery || null}, ${notes || ""}, ${createdBy || ""})
+        RETURNING *`;
+      return json(res, 201, po);
+    }
+    if (req.url === "/api/purchase-orders/update" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { id, updates } = body;
+      const [po] = await sql`UPDATE purchase_orders SET ${sql(Object.entries(updates).map(([k,v]) => sql`${sql(k)} = ${v}`))}, updated_at = now() WHERE id = ${id}::uuid AND workspace_id = ${wsId}::uuid RETURNING *`;
+      return json(res, 200, po);
+    }
+    if (req.url === "/api/purchase-orders/delete" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      await sql`DELETE FROM purchase_orders WHERE id = ${body.id}::uuid AND workspace_id = ${wsId}::uuid`;
+      return json(res, 200, { success: true });
+    }
 
     // ─── CRUD: Movements ────────────────────────────────
     if (req.url === "/api/movements" && req.method === "GET") {
@@ -652,6 +693,126 @@ async function handleApiRoute(req, res) {
       const wsId = getWsId(req);
       const result = wsId ? await sql`SELECT * FROM movements WHERE workspace_id = ${wsId}::uuid ORDER BY created_at DESC LIMIT 50` : [];
       return json(res, 200, result);
+    }
+    if (req.url === "/api/movements" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { itemId, type, quantity, fromLocationId, toLocationId, reference, notes, performedBy } = body;
+      const [m] = await sql`
+        INSERT INTO movements (workspace_id, item_id, type, quantity, from_location_id, to_location_id, reference, notes, performed_by)
+        VALUES (${wsId}::uuid, ${itemId}::uuid, ${type}, ${quantity}, ${fromLocationId || null}::uuid, ${toLocationId || null}::uuid, ${reference || ""}, ${notes || ""}, ${performedBy || ""})
+        RETURNING *`;
+      return json(res, 201, m);
+    }
+
+    // ─── CRUD: Requests ───────────────────────────────────
+    if (req.url === "/api/requests" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      const result = wsId ? await sql`SELECT * FROM requests WHERE workspace_id = ${wsId}::uuid ORDER BY created_at DESC` : [];
+      return json(res, 200, result);
+    }
+    if (req.url === "/api/requests" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { requestNumber, title, priority, items, requestedBy, reason } = body;
+      const [r] = await sql`
+        INSERT INTO requests (workspace_id, request_number, title, priority, items, requested_by, reason)
+        VALUES (${wsId}::uuid, ${requestNumber}, ${title}, ${priority || "normal"}, ${JSON.stringify(items || [])}, ${requestedBy}, ${reason || ""})
+        RETURNING *`;
+      return json(res, 201, r);
+    }
+    if (req.url === "/api/requests/update" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { id, updates } = body;
+      const [r] = await sql`UPDATE requests SET ${sql(Object.entries(updates).map(([k,v]) => sql`${sql(k)} = ${v}`))}, updated_at = now() WHERE id = ${id}::uuid AND workspace_id = ${wsId}::uuid RETURNING *`;
+      return json(res, 200, r);
+    }
+    if (req.url === "/api/requests/approve" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { id, approvedBy } = body;
+      const [r] = await sql`UPDATE requests SET status = 'approved', approved_by = ${approvedBy}, updated_at = now() WHERE id = ${id}::uuid AND workspace_id = ${wsId}::uuid RETURNING *`;
+      return json(res, 200, r);
+    }
+    if (req.url === "/api/requests/decline" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { id, declineReason } = body;
+      const [r] = await sql`UPDATE requests SET status = 'declined', decline_reason = ${declineReason || ""}, updated_at = now() WHERE id = ${id}::uuid AND workspace_id = ${wsId}::uuid RETURNING *`;
+      return json(res, 200, r);
+    }
+
+    // ─── CRUD: Users ─────────────────────────────────────
+    if (req.url === "/api/users" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const result = await sql`SELECT id, email, name, role, is_active, is_owner, created_at FROM users WHERE workspace_id = ${wsId}::uuid ORDER BY name`;
+      return json(res, 200, result);
+    }
+    if (req.url === "/api/users/invite" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { email, name, role } = body;
+      if (!email) return json(res, 400, { error: "Email required" });
+      const norm = email.toLowerCase();
+      const [existing] = await sql`SELECT id FROM users WHERE email = ${norm}`;
+      if (existing) return json(res, 400, { error: "User already exists" });
+      const displayName = name || norm.split("@")[0];
+      // Generate a temporary password
+      const tempPw = randomBytes(8).toString("hex");
+      const pwHash = hashPassword(tempPw);
+      const [user] = await sql`INSERT INTO users (email, name, password_hash, role, workspace_id, is_owner, is_active) VALUES (${norm}, ${displayName}, ${pwHash}, ${role || "requestor"}, ${wsId}::uuid, false, true) RETURNING id, email, name, role, is_active, is_owner, created_at`;
+      // Try to send invitation email
+      sendEmail(norm, "Welcome to SupplyIQ",
+        `<div style="font-family:sans-serif;max-width:600px;margin:0 auto"><h1>Supply<span style="color:#84cc16">IQ</span></h1><p>You've been added as a <strong>${role || "requestor"}</strong>.</p><p>Your temporary password: <code>${tempPw}</code></p><p><a href="https://supplyiq.netlify.app/login">Log in here</a></p></div>`,
+        `You've been added to SupplyIQ. Your temporary password is: ${tempPw}`,
+      );
+      return json(res, 201, user);
+    }
+    if (req.url === "/api/users/update-role" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { id, role } = body;
+      // Prevent demoting the last admin
+      if (role !== "admin") {
+        const admins = await sql`SELECT COUNT(*) as c FROM users WHERE workspace_id = ${wsId}::uuid AND role = 'admin' AND is_active = true`;
+        if (admins[0].c <= 1) {
+          const [target] = await sql`SELECT role FROM users WHERE id = ${id}::uuid`;
+          if (target && target.role === "admin") {
+            return json(res, 400, { error: "Cannot change the only admin" });
+          }
+        }
+      }
+      const [user] = await sql`UPDATE users SET role = ${role}, updated_at = now() WHERE id = ${id}::uuid AND workspace_id = ${wsId}::uuid RETURNING id, email, name, role, is_active, is_owner, created_at`;
+      return json(res, 200, user);
+    }
+    if (req.url === "/api/users/toggle-status" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { id, isActive } = body;
+      // Prevent deactivating the last admin
+      if (!isActive) {
+        const admins = await sql`SELECT COUNT(*) as c FROM users WHERE workspace_id = ${wsId}::uuid AND role = 'admin' AND is_active = true`;
+        if (admins[0].c <= 1) {
+          const [target] = await sql`SELECT role FROM users WHERE id = ${id}::uuid`;
+          if (target && target.role === "admin") {
+            return json(res, 400, { error: "Cannot deactivate the only admin" });
+          }
+        }
+      }
+      const [user] = await sql`UPDATE users SET is_active = ${isActive}, updated_at = now() WHERE id = ${id}::uuid AND workspace_id = ${wsId}::uuid RETURNING id, email, name, role, is_active, is_owner, created_at`;
+      return json(res, 200, user);
     }
 
     // ─── Stock Summary ──────────────────────────────────
@@ -667,12 +828,72 @@ async function handleApiRoute(req, res) {
       });
     }
 
-    // ─── Locations ──────────────────────────────────────
+    // ─── CRUD: Locations ────────────────────────────────
     if (req.url === "/api/locations" && req.method === "GET") {
       if (!dbConnected) return json(res, 503, { error: "DB not connected" });
       const wsId = getWsId(req);
       const result = wsId ? await sql`SELECT * FROM locations WHERE workspace_id = ${wsId}::uuid ORDER BY name` : [];
       return json(res, 200, result);
+    }
+    if (req.url === "/api/locations" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { name, type, parentId, description, address } = body;
+      const [l] = await sql`
+        INSERT INTO locations (workspace_id, name, type, parent_id, description, address)
+        VALUES (${wsId}::uuid, ${name}, ${type || "warehouse"}, ${parentId || null}::uuid, ${description || ""}, ${address || ""})
+        RETURNING *`;
+      return json(res, 201, l);
+    }
+    if (req.url === "/api/locations/update" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { id, updates } = body;
+      const [l] = await sql`UPDATE locations SET ${sql(Object.entries(updates).map(([k,v]) => sql`${sql(k)} = ${v}`))}, updated_at = now() WHERE id = ${id}::uuid AND workspace_id = ${wsId}::uuid RETURNING *`;
+      return json(res, 200, l);
+    }
+    if (req.url === "/api/locations/delete" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      await sql`DELETE FROM locations WHERE id = ${body.id}::uuid AND workspace_id = ${wsId}::uuid`;
+      return json(res, 200, { success: true });
+    }
+
+    // ─── CRUD: Categories ───────────────────────────────
+    if (req.url === "/api/categories" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      const result = wsId ? await sql`SELECT * FROM categories WHERE workspace_id = ${wsId}::uuid ORDER BY name` : [];
+      return json(res, 200, result);
+    }
+    if (req.url === "/api/categories" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { name, description, parentId } = body;
+      const [c] = await sql`
+        INSERT INTO categories (workspace_id, name, description, parent_id)
+        VALUES (${wsId}::uuid, ${name}, ${description || ""}, ${parentId || null}::uuid)
+        RETURNING *`;
+      return json(res, 201, c);
+    }
+    if (req.url === "/api/categories/update" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { id, updates } = body;
+      const [c] = await sql`UPDATE categories SET ${sql(Object.entries(updates).map(([k,v]) => sql`${sql(k)} = ${v}`))}, updated_at = now() WHERE id = ${id}::uuid AND workspace_id = ${wsId}::uuid RETURNING *`;
+      return json(res, 200, c);
+    }
+    if (req.url === "/api/categories/delete" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      await sql`DELETE FROM categories WHERE id = ${body.id}::uuid AND workspace_id = ${wsId}::uuid`;
+      return json(res, 200, { success: true });
     }
 
     return json(res, 404, { error: "Unknown endpoint" });
