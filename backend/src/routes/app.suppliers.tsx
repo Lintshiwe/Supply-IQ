@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Truck } from "lucide-react";
+import { Plus, Truck, Upload } from "lucide-react";
+import { toast } from "sonner";
 import { SuppliersTable } from "@/components/suppliers/SuppliersTable";
 import { SupplierFormSheet } from "@/components/suppliers/SupplierFormSheet";
 import { SupplierDetailSheet } from "@/components/suppliers/SupplierDetailSheet";
 import { CSVExportButton, type CSVColumn } from "@/components/data/CSVExportButton";
+import { CSVImportSheet, type ImportField } from "@/components/data/CSVImportSheet";
 import { useSuppliers, useItems, usePurchaseOrders } from "@/hooks/useInventoryData";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useDeleteSupplier, useUpdateItem } from "@/hooks/useInventoryMutations";
+import { useDeleteSupplier, useUpdateItem, useCreateSupplier } from "@/hooks/useInventoryMutations";
 import { useRole } from "@/hooks/useRole";
 import { Button } from "@/components/ui/button";
 import type { Supplier } from "@/types/inventory";
@@ -38,11 +40,24 @@ function SuppliersPage() {
   const isAdmin = role === "admin";
   const deleteSupplier = useDeleteSupplier();
   const updateItem = useUpdateItem();
+  const createSupplier = useCreateSupplier();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editSupplier, setEditSupplier] = useState<Supplier | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailSupplier, setDetailSupplier] = useState<Supplier | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+
+  const supplierImportFields = useMemo<ImportField[]>(() => [
+    { key: "name", label: "Name", required: true },
+    { key: "contactName", label: "Contact Person", required: true },
+    { key: "email", label: "Email", required: true },
+    { key: "phone", label: "Phone", required: true },
+    { key: "address", label: "Address", required: true },
+    { key: "leadTimeDays", label: "Lead Time (Days)", numeric: true },
+    { key: "rating", label: "Rating (1-5)", numeric: true },
+    { key: "notes", label: "Notes" },
+  ], []);
 
   const supplierCsvColumns = useMemo<CSVColumn<Supplier>[]>(() => [
     { header: "Name", accessor: (s) => s.name },
@@ -111,10 +126,16 @@ function SuppliersPage() {
             filename="supplyiq-suppliers"
           />
           {canManageSuppliers && (
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="mr-1.5 h-4 w-4" />
-              New Supplier
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+                <Upload className="mr-1.5 h-4 w-4" />
+                Import CSV
+              </Button>
+              <Button size="sm" onClick={openCreate}>
+                <Plus className="mr-1.5 h-4 w-4" />
+                New Supplier
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -149,6 +170,41 @@ function SuppliersPage() {
         open={formOpen}
         onOpenChange={setFormOpen}
         supplier={editSupplier}
+      />
+
+      <CSVImportSheet
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        fields={supplierImportFields}
+        entityName="suppliers"
+        onImport={async (rows) => {
+          let created = 0;
+          let failed = 0;
+          for (const row of rows) {
+            try {
+              const newSupplier: Supplier = {
+                id: `sup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                name: row.name?.trim() ?? "",
+                contactName: row.contactName?.trim() ?? "",
+                email: row.email?.trim().toLowerCase() ?? "",
+                phone: row.phone?.trim() ?? "",
+                address: row.address?.trim() ?? "",
+                leadTimeDays: Number(row.leadTimeDays) || 7,
+                rating: Math.min(5, Math.max(0, Number(row.rating) || 0)),
+                isActive: true,
+                notes: row.notes?.trim() ?? "",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+              createSupplier.mutate(newSupplier);
+              created++;
+            } catch {
+              failed++;
+            }
+          }
+          toast.success(`Imported ${created} suppliers${failed > 0 ? `, ${failed} failed` : ""}`);
+          return { created, failed };
+        }}
       />
     </div>
   );

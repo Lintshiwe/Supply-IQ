@@ -56,3 +56,16 @@ export async function handleGetStockSummary(workspaceId: string) {
     outOfStock: all.filter((i) => (i.currentStock ?? 0) === 0).length,
   };
 }
+
+export async function handleLookupByBarcode(workspaceId: string, barcode: string) {
+  const results = await db
+    .select()
+    .from(items)
+    .where(and(
+      eq(items.workspaceId, workspaceId),
+      sql`(${items.barcode} = ${barcode} OR ${items.sku} = ${barcode})`,
+    ))
+    .limit(1);
+  if (results.length === 0) throw new Error(`Item not found for barcode: ${barcode}`);
+  return results[0];
+}

@@ -154,6 +154,12 @@ async function routeApiRequest(
     const { handleGetItems } = await import("./items");
     return handleGetItems(wsId || body.workspaceId as string);
   }
+  if (path === "/api/items/lookup" && method === "GET") {
+    const barcode = params.get("barcode");
+    if (!barcode) throw new Error("barcode query param required");
+    const { handleLookupByBarcode } = await import("./items");
+    return handleLookupByBarcode(wsId || body.workspaceId as string, barcode);
+  }
   if (path === "/api/items" && method === "POST") {
     const { handleCreateItem } = await import("./items");
     return handleCreateItem({ ...body, workspaceId: wsId || body.workspaceId } as any);

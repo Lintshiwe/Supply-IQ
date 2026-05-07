@@ -52,6 +52,7 @@ export interface CSVImportSheetProps {
   existingSkus?: string[];
   knownCategories?: string[];
   knownSuppliers?: string[];
+  knownLocations?: string[];
 }
 
 interface ParsedCSV {
@@ -141,11 +142,13 @@ function validateRows(
   existingSkus: string[],
   knownCategories: string[],
   knownSuppliers: string[],
+  knownLocations: string[],
 ): ValidatedRow[] {
   const seenSkus = new Set<string>(existingSkus.map((s) => s.toLowerCase()));
   const fileSkus = new Set<string>();
   const catSet = new Set(knownCategories.map((c) => c.toLowerCase()));
   const supSet = new Set(knownSuppliers.map((s) => s.toLowerCase()));
+  const locSet = new Set(knownLocations.map((l) => l.toLowerCase()));
 
   return mappedRows.map((row) => {
     const errors: string[] = [];
@@ -176,7 +179,7 @@ function validateRows(
       }
     }
 
-    // Category / supplier warnings
+    // Category / supplier / location warnings
     const cat = row.category?.trim();
     if (cat && !catSet.has(cat.toLowerCase())) {
       warnings.push(`New category: "${cat}"`);
@@ -184,6 +187,10 @@ function validateRows(
     const sup = row.supplier?.trim();
     if (sup && !supSet.has(sup.toLowerCase())) {
       warnings.push(`New supplier: "${sup}"`);
+    }
+    const loc = row.location?.trim();
+    if (loc && !locSet.has(loc.toLowerCase())) {
+      warnings.push(`New location: "${loc}"`);
     }
 
     return { data: row, errors, warnings };
@@ -224,6 +231,7 @@ export function CSVImportSheet({
   existingSkus = [],
   knownCategories = [],
   knownSuppliers = [],
+  knownLocations = [],
 }: CSVImportSheetProps) {
   const [step, setStep] = useState(1);
   const [parsed, setParsed] = useState<ParsedCSV | null>(null);
@@ -322,8 +330,8 @@ export function CSVImportSheet({
   // Validation (computed when on step 3)
   const validatedRows = useMemo(() => {
     if (step < 3) return [];
-    return validateRows(mappedRows, fields, existingSkus, knownCategories, knownSuppliers);
-  }, [step, mappedRows, fields, existingSkus, knownCategories, knownSuppliers]);
+    return validateRows(mappedRows, fields, existingSkus, knownCategories, knownSuppliers, knownLocations);
+  }, [step, mappedRows, fields, existingSkus, knownCategories, knownSuppliers, knownLocations]);
 
   const validCount = useMemo(() => validatedRows.filter((r) => r.errors.length === 0).length, [validatedRows]);
   const errorCount = useMemo(() => validatedRows.filter((r) => r.errors.length > 0).length, [validatedRows]);

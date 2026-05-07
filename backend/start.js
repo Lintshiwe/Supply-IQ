@@ -594,6 +594,17 @@ async function handleApiRoute(req, res) {
       const items = wsId ? await sql`SELECT * FROM items WHERE workspace_id = ${wsId}::uuid ORDER BY updated_at DESC` : [];
       return json(res, 200, items);
     }
+    if (req.url.startsWith("/api/items/lookup") && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+      const barcode = url.searchParams.get("barcode");
+      if (!barcode) return json(res, 400, { error: "barcode query param required" });
+      const [item] = await sql`SELECT * FROM items WHERE workspace_id = ${wsId}::uuid AND (barcode = ${barcode} OR sku = ${barcode}) LIMIT 1`;
+      if (!item) return json(res, 404, { error: "Item not found", barcode });
+      return json(res, 200, item);
+    }
     if (req.url === "/api/items" && req.method === "POST") {
       if (!dbConnected) return json(res, 503, { error: "DB not connected" });
       const wsId = getWsId(req);

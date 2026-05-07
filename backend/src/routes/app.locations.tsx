@@ -1,17 +1,21 @@
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, ArrowRightLeft, MapPin } from "lucide-react";
+import { Plus, ArrowRightLeft, MapPin, Upload } from "lucide-react";
+import { toast } from "sonner";
 import { useLocationTree } from "@/hooks/useLocations";
 import { useItems, useLocations as useLocationsData } from "@/hooks/useInventoryData";
+import { useCreateLocation } from "@/hooks/useInventoryMutations";
 import { LocationTree } from "@/components/locations/LocationTree";
 import { LocationSummary } from "@/components/locations/LocationSummary";
 import { LocationFormSheet } from "@/components/locations/LocationFormSheet";
 import { TransferStockSheet } from "@/components/locations/TransferStockSheet";
+import { CSVImportSheet, type ImportField } from "@/components/data/CSVImportSheet";
 import { PermissionGate } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import type { LocationTreeNode } from "@/hooks/useLocations";
+import type { Location } from "@/types/inventory";
 
 export const Route = createFileRoute("/app/locations")({
   component: LocationsPage,
@@ -31,9 +35,19 @@ function LocationsPage() {
   const tree = useLocationTree();
   const { data: items } = useItems();
   const { data: allLocations } = useLocationsData();
+  const createLocation = useCreateLocation();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+
+  const locationImportFields = useMemo<ImportField[]>(() => [
+    { key: "name", label: "Name", required: true },
+    { key: "type", label: "Type (warehouse/zone/aisle/shelf/bin)" },
+    { key: "parentName", label: "Parent Location Name" },
+    { key: "description", label: "Description" },
+    { key: "address", label: "Address" },
+  ], []);
 
   const selectedNode = useMemo(
     () => (selectedId ? findNode(tree, selectedId) : null),
@@ -51,6 +65,10 @@ function LocationsPage() {
         </div>
         <PermissionGate permission="create_item">
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="mr-1.5 h-4 w-4" />
+              Import CSV
+            </Button>
             <Button
               size="sm"
               variant="outline"
@@ -105,6 +123,44 @@ function LocationsPage() {
 
       <LocationFormSheet open={formOpen} onOpenChange={setFormOpen} />
       <TransferStockSheet open={transferOpen} onOpenChange={setTransferOpen} />
+
+      <CSVImportSheet
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        fields={locationImportFields}
+        entityName="locations"
+        onImport={async (rows) => {
+          let created = 0;
+          let failed = 0;
+          const nameToId = new Map(allLocations.map((l) => [l.name.toLowerCase(), l.id]));
+          for (const row of rows) {
+            try {
+              const parentId = row.parentName?.trim()
+                ? nameToId.get(row.parentName.trim().toLowerCase()) ?? null
+                : null;
+              const newLocation: Location = {
+                id: `loc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                name: row.name?.trim() ?? "",
+                type: (row.type?.trim() || "warehouse") as Location["type"],
+                parentId,
+                description: row.description?.trim() ?? "",
+                address: row.address?.trim() ?? "",
+                isActive: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+              createLocation.mutate(newLocation);
+              // Track new name-to-id mapping for children
+              nameToId.set(newLocation.name.toLowerCase(), newLocation.id);
+              created++;
+            } catch {
+              failed++;
+            }
+          }
+          toast.success(`Imported ${created} locations${failed > 0 ? `, ${failed} failed` : ""}`);
+          return { created, failed };
+        }}
+      />
     </div>
   );
 }

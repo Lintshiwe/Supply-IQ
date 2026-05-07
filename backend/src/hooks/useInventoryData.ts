@@ -18,7 +18,18 @@ function useApi<T>(url: string, defaultValue: T): QueryResult<T> {
   useEffect(() => {
     if (!isAuthenticated) { setData(defaultValue); return; }
     setLoading(true);
-    fetch(url).then(r => r.json()).then(d => { setData(d); setLoading(false); }).catch(() => { setData(defaultValue); setLoading(false); });
+    fetch(url)
+      .then(r => r.json())
+      .then(d => {
+        // Guard: if defaultValue is an array, ensure response is also an array
+        if (Array.isArray(defaultValue) && !Array.isArray(d)) {
+          setData(defaultValue);
+        } else {
+          setData(d);
+        }
+        setLoading(false);
+      })
+      .catch(() => { setData(defaultValue); setLoading(false); });
   }, [url, isAuthenticated]);
 
   return { data, isLoading: loading, error: null };
@@ -150,10 +161,10 @@ export function useUsers(): QueryResult<ApiUser[]> {
       }));
       return { data: demoUsers, isLoading: false, error: null };
     }
-    if (isAuthenticated && apiResult.data.length > 0) {
+    if (isAuthenticated && Array.isArray(apiResult.data) && apiResult.data.length > 0) {
       // Normalize field names - production returns snake_case, dev returns camelCase
       const normalized = apiResult.data.map((u: Record<string, unknown>) => ({
-        id: u.id as string,
+        id: (u.id as string) || "",
         email: (u.email as string) || "",
         name: (u.name as string) || "",
         role: (u.role as ApiUser["role"]) || "requestor",

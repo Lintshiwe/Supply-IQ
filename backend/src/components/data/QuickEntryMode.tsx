@@ -20,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useItems } from "@/hooks/useInventoryData";
 import { useCreateMovement } from "@/hooks/useInventoryMutations";
+import { useAuth } from "@/hooks/useAuth";
 import { MovementType } from "@/types/inventory";
 import type { Item, StockMovement } from "@/types/inventory";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
 
   const { data: items } = useItems();
   const createMovement = useCreateMovement();
+  const { isAuthenticated } = useAuth();
 
   // Auto-focus input when opened or after action
   useEffect(() => {
@@ -58,10 +60,29 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
     setTimeout(() => inputRef.current?.focus(), 50);
   }, []);
 
-  const handleLookup = useCallback(() => {
+  const handleLookup = useCallback(async () => {
     const query = barcodeInput.trim();
     if (!query) return;
 
+    // Try API lookup first when authenticated
+    if (isAuthenticated) {
+      try {
+        const res = await fetch(`/api/items/lookup?barcode=${encodeURIComponent(query)}`);
+        if (res.ok) {
+          const item = await res.json();
+          setFoundItem(item);
+          setNotFound(null);
+          return;
+        }
+        if (res.status === 404) {
+          setFoundItem(null);
+          setNotFound(query);
+          return;
+        }
+      } catch { /* fall through to client-side search */ }
+    }
+
+    // Client-side search (demo mode or API fallback)
     const item = items.find(
       (i) => i.barcode?.toLowerCase() === query.toLowerCase() || i.sku.toLowerCase() === query.toLowerCase()
     );
@@ -73,7 +94,7 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
       setFoundItem(null);
       setNotFound(query);
     }
-  }, [barcodeInput, items]);
+  }, [barcodeInput, items, isAuthenticated]);
 
   const handleSubmit = useCallback(() => {
     if (!foundItem || !quantity) return;

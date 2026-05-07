@@ -80,10 +80,14 @@ function CatalogPage() {
     { key: "location", label: "Location" },
     { key: "quantity", label: "Quantity", numeric: true },
     { key: "reorderPoint", label: "Reorder Point", numeric: true },
+    { key: "reorderQuantity", label: "Reorder Quantity", numeric: true },
     { key: "unit", label: "Unit" },
-    { key: "costPrice", label: "Unit Cost", numeric: true },
-    { key: "sellingPrice", label: "Price", numeric: true },
+    { key: "costPrice", label: "Cost Price (ZAR)", numeric: true },
+    { key: "sellingPrice", label: "Selling Price (ZAR)", numeric: true },
     { key: "barcode", label: "Barcode" },
+    { key: "imageUrl", label: "Image URL" },
+    { key: "status", label: "Status" },
+    { key: "customFields", label: "Custom Fields (JSON)" },
   ], []);
 
   // Strip stock-level status before passing to store
@@ -363,29 +367,38 @@ function CatalogPage() {
         existingSkus={existingSkus}
         knownCategories={categories.map((c) => c.name)}
         knownSuppliers={suppliers.map((s) => s.name)}
+        knownLocations={locations.map((l) => l.name)}
         onImport={async (rows) => {
           let created = 0;
           let failed = 0;
           for (const row of rows) {
             try {
+              let customFields: Record<string, string | number | boolean> = {};
+              if (row.customFields) {
+                try { customFields = JSON.parse(row.customFields); } catch { /* invalid JSON, skip */ }
+              }
+              let status = ItemStatus.Active;
+              if (row.status && ["active", "discontinued", "archived"].includes(row.status.toLowerCase())) {
+                status = row.status.toLowerCase() as ItemStatus;
+              }
               const newItem: Item = {
                 id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                sku: row.sku ?? "",
-                barcode: row.barcode ?? null,
-                name: row.name ?? "",
-                description: row.description ?? "",
+                sku: row.sku?.trim() ?? "",
+                barcode: row.barcode?.trim() || null,
+                name: row.name?.trim() ?? "",
+                description: row.description?.trim() ?? "",
                 categoryId: categories.find((c) => c.name.toLowerCase() === row.category?.toLowerCase())?.id ?? null,
-                status: ItemStatus.Active,
-                unit: row.unit || "each",
+                status,
+                unit: row.unit?.trim() || "each",
                 currentStock: Number(row.quantity) || 0,
                 reorderPoint: Number(row.reorderPoint) || 0,
-                reorderQuantity: 0,
+                reorderQuantity: Number(row.reorderQuantity) || 0,
                 costPrice: Number(row.costPrice) || 0,
                 sellingPrice: Number(row.sellingPrice) || 0,
                 locationId: locations.find((l) => l.name.toLowerCase() === row.location?.toLowerCase())?.id ?? null,
                 supplierId: suppliers.find((s) => s.name.toLowerCase() === row.supplier?.toLowerCase())?.id ?? null,
-                imageUrl: null,
-                customFields: {},
+                imageUrl: row.imageUrl?.trim() || null,
+                customFields,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
               };
