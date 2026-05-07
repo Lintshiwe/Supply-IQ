@@ -1,0 +1,51 @@
+Name,SKU,Description,Category,Supplier,Location,Quantity,Reorder Point,Unit,Unit Cost,Price,Barcode
+USB-C Charging Cable 2m,STK-1001,Fast-charge USB-C to USB-C cable,Electronics,TechParts Direct,Main Warehouse,150,30,ea,3.50,8.99,49100001371
+Wireless Mouse,STK-1002,Ergonomic wireless mouse with USB receiver,Electronics,TechParts Direct,Main Warehouse,18,20,ea,12.00,24.99,49100003742
+HDMI Adapter,STK-1003,HDMI to VGA adapter with audio,Electronics,Acme Supply Co,Main Warehouse,42,15,ea,8.00,15.99,49100004183
+Surge Protector 6-Outlet,STK-1004,6-outlet surge protector 1200J 2m cord,Electronics,Acme Supply Co,Main Warehouse,12,10,ea,15.00,29.99,49100005484
+LED Desk Lamp,STK-1005,USB-powered LED desk lamp 8W 4000K,Electronics,TechParts Direct,Downtown Store,0,10,ea,22.00,39.99,49100001855
+Laptop Stand Adjustable,STK-1006,Aluminum adjustable laptop stand 12-25cm,Electronics,TechParts Direct,Main Warehouse,65,15,ea,18.00,34.99,49100002166
+Power Bank 10000mAh,STK-1007,Portable power bank with dual USB ports,Electronics,Acme Supply Co,Main Warehouse,8,12,ea,14.00,27.99,49100001947
+Webcam HD 1080p,STK-1008,HD webcam with built-in microphone and autofocus,Electronics,TechParts Direct,Main Warehouse,9,10,ea,25.00,49.99,49100002968
+Ethernet Cable Cat6 5m,STK-1009,5m Cat6 ethernet cable blue,Electronics,Acme Supply Co,Main Warehouse,80,25,ea,5.50,12.99,49100004109
+USB Flash Drive 64GB,STK-1010,USB 3.0 flash drive 64GB with hardware encryption,Electronics,TechParts Direct,Main Warehouse,55,20,ea,6.00,13.99,49100003700
+Bluetooth Speaker Portable,STK-1011,Portable Bluetooth speaker IPX7 waterproof 10W,Electronics,TechParts Direct,Downtown Store,15,8,ea,35.00,69.99,49100001501
+Wireless Keyboard,STK-1012,Full-size wireless keyboard QWERTY layout,Electronics,Acme Supply Co,Main Warehouse,22,15,ea,19.00,39.99,49100001642
+A4 Copy Paper Ream (500 sheets),STK-1013,80gsm A4 copy paper 500 sheets per ream,Office Supplies,OfficeEssentials SA,Main Warehouse,200,50,ea,4.00,7.99,49100003073
+Ballpoint Pens 12-Pack Blue,STK-1014,12-pack blue ballpoint pens 0.7mm retractable,Office Supplies,OfficeEssentials SA,Main Warehouse,20,25,pack,2.00,5.99,49100001974
+Sticky Notes 6-Pack (3x3 inch),STK-1015,Yellow sticky notes 6 pads 100 sheets each,Office Supplies,OfficeEssentials SA,Main Warehouse,55,20,pack,3.00,6.49,49100002055
+Binder Clips Box (12pc Medium),STK-1016,Metal binder clips medium 19mm 12 per box,Office Supplies,BulkMart Wholesalers,Main Warehouse,40,15,box,1.50,3.99,49100002196
+Whiteboard Markers 8-Pack,STK-1017,8-pack chisel tip whiteboard markers low odor,Office Supplies,BulkMart Wholesalers,Main Warehouse,5,10,pack,4.00,8.99,49100002237
+Desk Organizer 3-Tier,STK-1018,3-tier metal mesh desk organizer black,Office Supplies,OfficeEssentials SA,Regional Office,0,8,ea,11.00,19.99,49100004198
+Heavy-Duty Stapler,STK-1019,Heavy-duty stapler 100 sheet capacity black,Office Supplies,OfficeEssentials SA,Main Warehouse,28,10,ea,9.00,16.99,49100002519
+File Folders 50-Pack Manila,STK-1020,Letter size manila file folders 1/3 cut tab,Office Supplies,BulkMart Wholesalers,Main Warehouse,75,20,pack,8.00,14.99,49100002750
+Highlighters 6-Pack Assorted,STK-1021,6-pack chisel tip highlighters quick-dry,Office Supplies,OfficeEssentials SA,Main Warehouse,35,12,pack,3.50,7.49,49100002616
+Correction Tape 5-Pack,STK-1022,5-pack correction tape 5mm x 8m white,Office Supplies,OfficeEssentials SA,Main Warehouse,25,10,pack,5.00,9.99,49100002987
+A3 Copy Paper Ream (500 sheets),STK-1023,80gsm A3 copy paper 500 sheets per ream,Office Supplies,OfficeEssentials SA,Main Warehouse,60,20,ea,7.50,14.99,49100003908
+Scissors 8-inch Heavy Duty,STK-1024,8-inch stainless steel scissors ambidextrous,Office Supplies,BulkMart Wholesalers,Main Warehouse,30,10,ea,3.00,6.49,49100003170
+All-Purpose Cleaner 5L,STK-1025,Lemon-scented concentrated all-purpose cleaner 5L,Cleaning,CleanPro Distributors,Main Warehouse,45,15,ea,6.00,11.99,49100003425
+Microfiber Cloths 24-Pack,STK-1026,24-pack microfiber cleaning cloths 30x30cm assorted,Cleaning,CleanPro Distributors,Main Warehouse,60,20,pack,8.00,14.99,49100003566
+Floor Mop System Complete,STK-1027,Complete floor mop system with adjustable handle and bucket,Cleaning,CleanPro Distributors,Main Warehouse,3,5,set,25.00,44.99,49100003607
+Hand Sanitizer 5L Refill,STK-1028,70% alcohol gel hand sanitizer 5L refill,Cleaning,CleanPro Distributors,Paarl Distribution Centre,0,20,ea,5.00,9.99,49100003748
+Heavy-Duty Trash Bags 100ct (85L),STK-1029,100-count heavy-duty black trash bags 85L drawstring,Cleaning,CleanPro Distributors,Main Warehouse,80,25,pack,12.00,19.99,49100003889
+Glass Cleaner 750ml Spray,STK-1030,Ammonia-free glass cleaner 750ml spray trigger,Cleaning,ChemSupply Africa,Main Warehouse,35,10,ea,4.00,7.49,49100004920
+Disinfecting Wipes 75ct Tub,STK-1031,75-count lemon scented disinfecting wipes 99.9% kill rate,Cleaning,CleanPro Distributors,Main Warehouse,7,15,ea,6.00,10.99,49100004911
+Toilet Paper 48-Roll Case (2-Ply),STK-1032,48-roll case 2-ply toilet paper 400 sheets per roll,Cleaning,BulkMart Wholesalers,Main Warehouse,120,40,carton,18.00,32.99,49100004882
+Hand Soap 5L Refill (Antibacterial),STK-1033,Antibacterial hand soap 5L refill neutral scent,Cleaning,CleanPro Distributors,Main Warehouse,25,10,ea,7.00,13.99,49100004853
+Safety Glasses 12-Pack (Clear Lens),STK-1034,12-pack ANSI Z87.1 clear lens safety glasses anti-fog,Safety Equipment,SafetyFirst Inc,Main Warehouse,48,12,pack,18.00,32.99,49100003144
+Nitrile Gloves 100ct (Large),STK-1035,100-count large nitrile gloves powder-free 4mil,Safety Equipment,SafetyFirst Inc,Main Warehouse,28,30,box,9.00,16.99,49100003835
+Hard Hat ANSI Type I (White),STK-1036,ANSI Type I white hard hat with ratchet suspension,Safety Equipment,SafetyFirst Inc,Main Warehouse,22,8,ea,14.00,24.99,49100004926
+High-Vis Vest Class 2 (Orange),STK-1037,Class 2 orange high-visibility vest XL with reflective tape,Safety Equipment,SafetyFirst Inc,Main Warehouse,6,10,ea,7.00,12.99,49100004837
+First Aid Kit 50-Piece (ANSI B),STK-1038,ANSI B class 50-piece wall-mountable first aid kit,Safety Equipment,SafetyFirst Inc,Main Warehouse,0,5,ea,30.00,54.99,49100004848
+Ear Plugs 200-Pair Box,STK-1039,200-pair disposable ear plugs NRR 32dB,Safety Equipment,SafetyFirst Inc,Main Warehouse,65,20,box,12.00,22.99,49100004859
+Cut-Resistant Gloves Level 5 (Medium),STK-1040,Level 5 cut-resistant gloves medium nitrile coated,Safety Equipment,SafetyFirst Inc,Main Warehouse,15,10,ea,11.00,19.99,49100004870
+Fire Extinguisher 2kg CO2,STK-1041,2kg CO2 fire extinguisher 34B rating 12-month service interval,Safety Equipment,SafetyFirst Inc,Main Warehouse,8,3,ea,85.00,149.99,49100004881
+Eye Wash Station Portable 500ml,STK-1042,Portable sterile eye wash station 500ml 3-year expiry,Safety Equipment,SafetyFirst Inc,Main Warehouse,10,5,ea,22.00,39.99,49100004892
+Cordless Drill Kit 18V,STK-1043,18V brushless cordless drill kit with 2 batteries 13mm chuck,Tools & Hardware,PowerTools Warehouse,Main Warehouse,18,5,set,55.00,99.99,49100004503
+Socket Wrench Set 24pc,STK-1044,24-piece socket wrench set 1/2 inch drive metric and SAE,Tools & Hardware,PowerTools Warehouse,Main Warehouse,25,8,set,28.00,49.99,49100004514
+Tape Measure 8m,STK-1045,8m auto-lock tape measure 25mm wide metric,Tools & Hardware,PowerTools Warehouse,Main Warehouse,40,12,ea,6.00,11.99,49100004525
+Utility Knife Heavy-Duty,STK-1046,Heavy-duty retractable utility knife with 3 blades metal handle,Tools & Hardware,PowerTools Warehouse,Main Warehouse,4,10,ea,5.00,9.99,49100004536
+Hex Key Set 30pc (Metric & Imperial),STK-1047,30-piece foldable hex key set metric and imperial sizes,Tools & Hardware,PowerTools Warehouse,Main Warehouse,0,8,set,10.00,17.99,49100004547
+Cable Ties 500-Pack (200mm Black),STK-1048,500-pack black UV-resistant cable ties 200mm x 4.8mm,Tools & Hardware,TechParts Direct,Main Warehouse,90,25,pack,7.00,12.99,49100004558
+Screw Assortment Kit 1000pc,STK-1049,1000-piece zinc-plated steel screw assortment M3-M8,Tools & Hardware,PowerTools Warehouse,Main Warehouse,33,10,box,15.00,27.99,49100004569
+Angle Grinder 115mm 850W,STK-1050,115mm 850W angle grinder 11000RPM with adjustable guard,Tools & Hardware,PowerTools Warehouse,Main Warehouse,12,4,ea,48.00,89.99,49100004580

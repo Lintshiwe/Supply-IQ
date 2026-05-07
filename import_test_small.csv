@@ -1,0 +1,4 @@
+Name,SKU,Description,Category,Supplier,Location,Quantity,Reorder Point,Unit,Unit Cost,Price,Barcode
+USB-C Cable,STK-1001,Fast charge cable,Electronics,TechParts Direct,Main Warehouse,150,30,ea,3,8,49100001371
+Wireless Mouse,STK-1002,Ergonomic mouse,Electronics,TechParts Direct,Main Warehouse,18,20,ea,12,24,49100003742
+HDMI Adapter,STK-1003,HDMI to VGA,Electronics,Acme Supply Co,Main Warehouse,42,15,ea,8,15,49100004183

@@ -123,12 +123,22 @@ function parseCSV(text: string): ParsedCSV {
 
 function autoMap(csvHeaders: string[], fields: ImportField[]): Record<string, string> {
   const mapping: Record<string, string> = {};
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
   for (const field of fields) {
-    const normalised = field.label.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const match = csvHeaders.find((h) => {
-      const n = h.toLowerCase().replace(/[^a-z0-9]/g, "");
-      return n === normalised || n.includes(normalised) || normalised.includes(n);
-    });
+    const fieldNorm = norm(field.label);
+
+    // Try exact match first
+    let match = csvHeaders.find((h) => norm(h) === fieldNorm);
+
+    // Fall back to partial/substring match
+    if (!match) {
+      match = csvHeaders.find((h) => {
+        const hNorm = norm(h);
+        return hNorm.includes(fieldNorm) || fieldNorm.includes(hNorm);
+      });
+    }
+
     if (match) mapping[field.key] = match;
   }
   return mapping;
