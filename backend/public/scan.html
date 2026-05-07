@@ -117,14 +117,20 @@ async function lookup(barcode) {
   const resultDiv = document.getElementById('scanResult');
   resultDiv.innerHTML = '<p style="color:#94a3b8;padding:12px">Looking up ' + barcode + '...</p>';
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+
   try {
-    const res = await fetch(`${API}?barcode=${encodeURIComponent(barcode)}`);
+    const res = await fetch(`${API}?barcode=${encodeURIComponent(barcode)}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
     const data = await res.json();
 
     if (!res.ok) {
       resultDiv.innerHTML = `<div class="error">
         <p>Not Found: <strong>${barcode}</strong></p>
-        <p style="font-size:11px;margin-top:4px">Import items to the catalog first.</p>
+        <p style="font-size:11px;margin-top:4px">Import items to the catalog first, then try again.</p>
       </div>`;
     } else {
       let cls = data.stock === 0 ? 'out-stock' : data.stock <= 10 ? 'low-stock' : 'in-stock';
@@ -136,8 +142,23 @@ async function lookup(barcode) {
         <div class="stock-badge ${cls}">${label}: ${data.stock} ${data.unit || 'ea'}</div>
       </div>`;
     }
-  } catch {
-    resultDiv.innerHTML = '<div class="error"><p>Connection error — check server</p></div>';
+  } catch (e) {
+    clearTimeout(timeout);
+    if (e.name === 'AbortError') {
+      resultDiv.innerHTML = `<div class="error">
+        <p>Server timeout — waking up...</p>
+        <p style="font-size:11px;margin-top:4px">Free server sleeps when idle. Try again in 10 seconds.</p>
+        <button class="btn btn-start" style="margin-top:8px" onclick="lookup('${barcode}')">Retry</button>
+      </div>`;
+    } else {
+      resultDiv.innerHTML = `<div class="error">
+        <p>Connection failed — server is starting up</p>
+        <p style="font-size:11px;margin-top:4px">First request wakes the server (~30s). Try again.</p>
+        <button class="btn btn-start" style="margin-top:8px" onclick="lookup('${barcode}')">Retry</button>
+      </div>`;
+      // Wake up the server by hitting the root
+      fetch('/', { signal: AbortSignal.timeout(3000) }).catch(() => {});
+    }
   }
 }
 
@@ -158,6 +179,13 @@ if (bc) {
   document.getElementById('manualInput').value = bc;
   lookup(bc);
 }
+
+// Wake up server on page load (free tier cold start)
+window.addEventListener('load', () => {
+  fetch('/api/scan?barcode=wakeup', { signal: AbortSignal.timeout(5000) })
+    .then(() => document.getElementById('scanCount').textContent = 'Server ready')
+    .catch(() => document.getElementById('scanCount').textContent = 'Waking server...');
+});
 </script>
 </body>
 </html>
