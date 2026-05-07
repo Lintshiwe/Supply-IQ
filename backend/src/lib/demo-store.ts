@@ -185,6 +185,11 @@ export class DemoStore {
     return false;
   }
 
+  clearAllItems(): void {
+    this.data.items = [];
+    this.version++;
+  }
+
   getStockSummary(): StockSummary {
     const items = this.data.items;
     return {

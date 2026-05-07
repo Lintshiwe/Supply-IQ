@@ -34,6 +34,8 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
   const [barcodeInput, setBarcodeInput] = useState("");
   const [foundItem, setFoundItem] = useState<Item | null>(null);
   const [notFound, setNotFound] = useState<string | null>(null);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
   const [movementType, setMovementType] = useState<MovementType>(MovementType.Received);
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
@@ -41,7 +43,7 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
 
   const { data: items } = useItems();
   const createMovement = useCreateMovement();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   // Auto-focus input when opened or after action
   useEffect(() => {
@@ -53,6 +55,7 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
   const resetForm = useCallback(() => {
     setFoundItem(null);
     setNotFound(null);
+    setLookupError(null);
     setMovementType(MovementType.Received);
     setQuantity("");
     setNotes("");
@@ -64,6 +67,11 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
     const query = barcodeInput.trim();
     if (!query) return;
 
+    setIsLookingUp(true);
+    setLookupError(null);
+    setFoundItem(null);
+    setNotFound(null);
+
     // Try API lookup first when authenticated
     if (isAuthenticated) {
       try {
@@ -71,29 +79,36 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
         if (res.ok) {
           const item = await res.json();
           setFoundItem(item);
-          setNotFound(null);
+          setIsLookingUp(false);
           return;
         }
         if (res.status === 404) {
-          setFoundItem(null);
           setNotFound(query);
+          setIsLookingUp(false);
           return;
         }
-      } catch { /* fall through to client-side search */ }
+        const errData = await res.json().catch(() => ({}));
+        setLookupError(errData.error || `Server error (${res.status})`);
+        setIsLookingUp(false);
+        return;
+      } catch (e) {
+        setLookupError("Network error — check your connection and try again.");
+        setIsLookingUp(false);
+        return;
+      }
     }
 
-    // Client-side search (demo mode or API fallback)
+    // Client-side search (demo mode)
     const item = items.find(
       (i) => i.barcode?.toLowerCase() === query.toLowerCase() || i.sku.toLowerCase() === query.toLowerCase()
     );
 
     if (item) {
       setFoundItem(item);
-      setNotFound(null);
     } else {
-      setFoundItem(null);
       setNotFound(query);
     }
+    setIsLookingUp(false);
   }, [barcodeInput, items, isAuthenticated]);
 
   const handleSubmit = useCallback(() => {
@@ -108,7 +123,7 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
       toLocationId: null,
       reference: `Quick Entry`,
       notes,
-      performedBy: "Demo Admin",
+      performedBy: user?.name || "User",
       createdAt: new Date().toISOString(),
     };
 
@@ -157,17 +172,31 @@ export function QuickEntryMode({ open, onOpenChange }: QuickEntryModeProps) {
                 autoFocus
                 autoComplete="off"
               />
-              <Button onClick={handleLookup} className="h-12 px-5" disabled={!barcodeInput.trim()}>
-                Look up
+              <Button onClick={handleLookup} className="h-12 px-5" disabled={!barcodeInput.trim() || isLookingUp}>
+                {isLookingUp ? "Looking…" : "Look up"}
               </Button>
             </div>
           </div>
 
+          {/* Lookup error */}
+          {lookupError && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
+              <p className="text-sm font-medium text-destructive">Lookup failed</p>
+              <p className="mt-1 text-xs text-muted-foreground">{lookupError}</p>
+              <Button variant="ghost" size="sm" className="mt-2" onClick={resetForm}>
+                Try again
+              </Button>
+            </div>
+          )}
+
           {/* Not found */}
           {notFound && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
-              <p className="text-sm font-medium text-destructive">Item not found</p>
-              <p className="mt-1 font-mono text-xs text-muted-foreground">{notFound}</p>
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-center">
+              <p className="text-sm font-medium text-amber-600">Item not found</p>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">Barcode: {notFound}</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Did you import the items CSV? Items must exist in the catalog before scanning.
+              </p>
               <Button variant="ghost" size="sm" className="mt-2" onClick={resetForm}>
                 Try again
               </Button>

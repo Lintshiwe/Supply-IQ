@@ -342,3 +342,16 @@ export function useToggleUserStatus() {
     (data) => data,
   );
 }
+
+export function useClearAllItems() {
+  const { demoStore, bumpVersion } = useDemo();
+
+  const clear = useCallback(() => {
+    if (demoStore) {
+      demoStore.clearAllItems();
+      bumpVersion();
+    }
+  }, [demoStore, bumpVersion]);
+
+  return clear;
+}
