@@ -57,7 +57,7 @@ export async function handleGetStockSummary(workspaceId: string) {
   };
 }
 
-export async function handleLookupByBarcode(workspaceId: string, barcode: string) {
+export async function handleLookupByBarcode(workspaceId: string, barcode: string, publicOnly?: boolean) {
   const results = await db
     .select()
     .from(items)
@@ -67,5 +67,15 @@ export async function handleLookupByBarcode(workspaceId: string, barcode: string
     ))
     .limit(1);
   if (results.length === 0) throw new Error(`Item not found for barcode: ${barcode}`);
-  return results[0];
+  const item = results[0];
+  if (publicOnly) {
+    return {
+      name: item.name,
+      sku: item.sku,
+      barcode: item.barcode,
+      stock: item.currentStock,
+      unit: item.unit,
+    };
+  }
+  return item;
 }

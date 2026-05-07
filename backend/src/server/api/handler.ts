@@ -304,6 +304,12 @@ async function routeApiRequest(
   }
 
   // Scan log endpoints (mobile scanner)
+  if (path === "/api/scan" && method === "GET") {
+    const barcode = params.get("barcode");
+    if (!barcode) throw new Error("barcode query param required");
+    const { handleLookupByBarcode } = await import("./items");
+    return handleLookupByBarcode(wsId || body.workspaceId as string, barcode, true);
+  }
   if (path === "/api/scan-log" && method === "POST") {
     const { handleCreateScanLog } = await import("./scan-logs");
     return handleCreateScanLog({ ...body, workspaceId: wsId || body.workspaceId } as any);
