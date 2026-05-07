@@ -607,12 +607,11 @@ async function handleApiRoute(req, res) {
     }
     // Public scan endpoint — no auth required, returns minimal info only
     if (req.url.startsWith("/api/scan") && req.method === "GET") {
-      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      if (!dbConnected) return json(res, 503, { error: "Database not connected" });
       const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
       const barcode = url.searchParams.get("barcode");
       if (!barcode) return json(res, 400, { error: "barcode query param required" });
-      // Search across ALL workspaces for demo/public access
-      const [item] = await sql`SELECT id, sku, name, barcode, current_stock, unit FROM items WHERE barcode = ${barcode} OR sku = ${barcode} OR sku ILIKE ${"%" + barcode + "%"} OR barcode ILIKE ${"%" + barcode + "%"} LIMIT 1`;
+      const [item] = await sql`SELECT id, sku, name, barcode, current_stock, unit FROM items WHERE barcode = ${barcode} OR sku = ${barcode} LIMIT 1`;
       if (!item) return json(res, 404, { error: "Item not found", barcode });
       return json(res, 200, {
         name: item.name,
