@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useDemo } from "@/hooks/useDemo";
+import { useAuth } from "@/hooks/useAuth";
+import { useApproveRequest, useDeclineRequest } from "@/hooks/useInventoryMutations";
 import { RequestStatus, MovementType } from "@/types/inventory";
 import type { InventoryRequest, Item, StockMovement } from "@/types/inventory";
 
@@ -38,6 +40,7 @@ function checkStock(
 
 function buildMovements(
   request: InventoryRequest,
+  performedBy?: string,
   qtys?: Record<string, number>,
 ): StockMovement[] {
   const now = new Date().toISOString();
@@ -55,13 +58,16 @@ function buildMovements(
       toLocationId: null,
       reference: request.requestNumber,
       notes: `Auto-generated from request ${request.requestNumber}`,
-      performedBy: "demo-admin",
+      performedBy: performedBy || "system",
       createdAt: now,
     }));
 }
 
 export function useApprovalActions({ items }: { items: Item[] }) {
   const { isDemo, demoStore, bumpVersion } = useDemo();
+  const { isAuthenticated, user } = useAuth();
+  const approveRequest = useApproveRequest();
+  const declineRequest = useDeclineRequest();
   const [dialog, setDialog] = useState<DialogType>(null);
   const [activeRequest, setActiveRequest] = useState<InventoryRequest | null>(null);
   const [declineReason, setDeclineReason] = useState("");
@@ -69,6 +75,8 @@ export function useApprovalActions({ items }: { items: Item[] }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const itemMap = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
+
+  const approverName = user?.name || "";
 
   function openApprove(req: InventoryRequest) {
     setActiveRequest(req);
@@ -92,46 +100,74 @@ export function useApprovalActions({ items }: { items: Item[] }) {
   }
 
   function confirmApprove() {
-    if (!activeRequest || !isDemo || !demoStore) return;
-    const err = checkStock(activeRequest.items, itemMap);
-    if (err) { toast.error(err); return; }
+    if (!activeRequest) return;
+    if (isDemo && demoStore) {
+      const err = checkStock(activeRequest.items, itemMap);
+      if (err) { toast.error(err); return; }
 
-    const now = new Date().toISOString();
-    const movements = buildMovements(activeRequest);
-    setIsLoading(true);
-    try {
-      for (const m of movements) demoStore.createMovement(m);
-      demoStore.updateRequest(activeRequest.id, {
-        status: RequestStatus.Approved,
-        approvedBy: "demo-admin",
-        updatedAt: now,
-      });
-      bumpVersion();
-      toast.success(`${activeRequest.requestNumber} approved`);
-      setDialog(null);
-      setActiveRequest(null);
-    } finally {
-      setIsLoading(false);
+      const now = new Date().toISOString();
+      const movements = buildMovements(activeRequest, approverName);
+      setIsLoading(true);
+      try {
+        for (const m of movements) demoStore.createMovement(m);
+        demoStore.updateRequest(activeRequest.id, {
+          status: RequestStatus.Approved,
+          approvedBy: approverName || "Admin",
+          updatedAt: now,
+        });
+        bumpVersion();
+        toast.success(`${activeRequest.requestNumber} approved`);
+        setDialog(null);
+        setActiveRequest(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (isAuthenticated) {
+      approveRequest.mutate(
+        { id: activeRequest.id, approvedBy: approverName },
+        {
+          onSuccess: () => {
+            toast.success(`${activeRequest.requestNumber} approved`);
+            setDialog(null);
+            setActiveRequest(null);
+          },
+          onError: (e) => toast.error(e.message),
+        },
+      );
     }
   }
 
   function confirmDecline() {
-    if (!activeRequest || !declineReason.trim() || !isDemo || !demoStore) return;
-    const now = new Date().toISOString();
-    setIsLoading(true);
-    try {
-      demoStore.updateRequest(activeRequest.id, {
-        status: RequestStatus.Declined,
-        approvedBy: "demo-admin",
-        declineReason: declineReason.trim(),
-        updatedAt: now,
-      });
-      bumpVersion();
-      toast.success(`${activeRequest.requestNumber} declined`);
-      setDialog(null);
-      setActiveRequest(null);
-    } finally {
-      setIsLoading(false);
+    if (!activeRequest || !declineReason.trim()) return;
+    if (isDemo && demoStore) {
+      const now = new Date().toISOString();
+      setIsLoading(true);
+      try {
+        demoStore.updateRequest(activeRequest.id, {
+          status: RequestStatus.Declined,
+          approvedBy: approverName || "Admin",
+          declineReason: declineReason.trim(),
+          updatedAt: now,
+        });
+        bumpVersion();
+        toast.success(`${activeRequest.requestNumber} declined`);
+        setDialog(null);
+        setActiveRequest(null);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (isAuthenticated) {
+      declineRequest.mutate(
+        { id: activeRequest.id, declineReason: declineReason.trim() },
+        {
+          onSuccess: () => {
+            toast.success(`${activeRequest.requestNumber} declined`);
+            setDialog(null);
+            setActiveRequest(null);
+          },
+          onError: (e) => toast.error(e.message),
+        },
+      );
     }
   }
 
@@ -146,14 +182,14 @@ export function useApprovalActions({ items }: { items: Item[] }) {
     const allFull = activeRequest.items.every((li) => (partialQtys[li.id] ?? 0) >= li.quantity);
     const newStatus = allFull ? RequestStatus.Approved : RequestStatus.PartiallyFulfilled;
     const now = new Date().toISOString();
-    const movements = buildMovements(activeRequest, partialQtys);
+    const movements = buildMovements(activeRequest, approverName, partialQtys);
 
     setIsLoading(true);
     try {
       for (const m of movements) demoStore.createMovement(m);
       demoStore.updateRequest(activeRequest.id, {
         status: newStatus,
-        approvedBy: "demo-admin",
+        approvedBy: approverName || "Admin",
         updatedAt: now,
       });
       bumpVersion();

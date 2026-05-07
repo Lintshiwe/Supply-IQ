@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Plus, Menu, User, LogOut, Settings, ChevronDown, ScanBarcode } from "lucide-react";
+import { Search, Plus, Menu, User, LogOut, Settings, ChevronDown, ScanBarcode, FileText } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ import { NotificationCenter } from "@/components/notifications/NotificationCente
 import { useDemo } from "@/hooks/useDemo";
 import { useRole } from "@/hooks/useRole";
 import { useAuth } from "@/hooks/useAuth";
-import { PermissionGate } from "@/hooks/usePermissions";
+import { PermissionGate, usePermissions } from "@/hooks/usePermissions";
 
 const ROLE_BADGE_STYLES: Record<string, string> = {
   admin: "bg-primary/15 text-primary border-primary/20",
@@ -49,6 +49,7 @@ export function Header() {
   const { exitDemoMode } = useDemo();
   const { role } = useRole();
   const { isAuthenticated, user, subscription, logout } = useAuth();
+  const { can } = usePermissions();
   const navigate = useNavigate();
 
   const displayName = isAuthenticated && user ? user.name : "Demo User";
@@ -94,6 +95,15 @@ export function Header() {
         <Button size="icon" variant="outline" className="shrink-0" aria-label="New item" onClick={() => navigate({ to: "/app/catalog", search: { newItem: "true" } })}>
           <Plus className="h-4 w-4" />
         </Button>
+      </PermissionGate>
+
+      <PermissionGate permission="create_request">
+        {role === "requestor" && !can("create_item") ? (
+          <Button size="sm" variant="outline" className="shrink-0 gap-1.5" aria-label="New request" onClick={() => navigate({ to: "/app/requests" })}>
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">New Request</span>
+          </Button>
+        ) : null}
       </PermissionGate>
 
       <NotificationBell onClick={() => setNotifOpen(true)} />

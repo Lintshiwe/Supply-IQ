@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateRequest } from "@/hooks/useInventoryMutations";
+import { useAuth } from "@/hooks/useAuth";
+import { useDemo } from "@/hooks/useDemo";
 import { RequestStatus } from "@/types/inventory";
 import type { Item } from "@/types/inventory";
 
@@ -52,6 +54,8 @@ interface RequestFormSheetProps {
 
 export function RequestFormSheet({ open, onOpenChange, items }: RequestFormSheetProps) {
   const createRequest = useCreateRequest();
+  const { user } = useAuth();
+  const { isDemo } = useDemo();
   const [title, setTitle] = useState("");
   const [reason, setReason] = useState("");
   const [priority, setPriority] = useState<"normal" | "urgent">("normal");
@@ -130,7 +134,7 @@ export function RequestFormSheet({ open, onOpenChange, items }: RequestFormSheet
           quantity: l.quantity,
           notes: "",
         })),
-        requestedBy: "demo-user",
+        requestedBy: isDemo ? (user?.name || "Demo User") : (user?.name || "User"),
         approvedBy: null,
         reason,
         createdAt: now,

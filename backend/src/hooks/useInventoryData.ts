@@ -39,11 +39,15 @@ export function useItems(filters?: ItemFilters): QueryResult<Item[]> {
 export function useCategories(): QueryResult<Category[]> {
   const { isDemo, demoStore, version } = useDemo();
   const { isAuthenticated } = useAuth();
+  const apiResult = useApi<Category[]>("/api/categories", []);
+
   return useMemo(() => {
     if (isDemo && demoStore) return { data: demoStore.getCategories(), isLoading: false, error: null };
-    if (isAuthenticated) return { data: [] as Category[], isLoading: true, error: null };
+    if (isAuthenticated && apiResult.data.length > 0) return apiResult;
+    if (isAuthenticated && !apiResult.isLoading) return apiResult;
+    if (isAuthenticated) return apiResult;
     return { data: [] as Category[], isLoading: false, error: null };
-  }, [isDemo, isAuthenticated, demoStore, version]);
+  }, [isDemo, isAuthenticated, demoStore, version, apiResult]);
 }
 
 export function useSuppliers(): QueryResult<Supplier[]> {
@@ -106,8 +110,60 @@ export function usePurchaseOrders(): QueryResult<PurchaseOrder[]> {
 
 export function useRequests(): QueryResult<InventoryRequest[]> {
   const { isDemo, demoStore, version } = useDemo();
+  const { isAuthenticated } = useAuth();
+  const apiResult = useApi<InventoryRequest[]>("/api/requests", []);
+
   return useMemo(() => {
     if (isDemo && demoStore) return { data: [...demoStore.getRequests()], isLoading: false, error: null };
+    if (isAuthenticated && apiResult.data.length > 0) return apiResult;
+    if (isAuthenticated && !apiResult.isLoading) return apiResult;
+    if (isAuthenticated) return apiResult;
     return { data: [] as InventoryRequest[], isLoading: false, error: null };
-  }, [isDemo, demoStore, version]);
+  }, [isDemo, isAuthenticated, demoStore, version, apiResult]);
+}
+
+export interface ApiUser {
+  id: string;
+  email: string;
+  name: string;
+  role: "admin" | "manager" | "requestor";
+  isActive: boolean;
+  isOwner: boolean;
+  createdAt: string;
+}
+
+export function useUsers(): QueryResult<ApiUser[]> {
+  const { isDemo, demoStore, version } = useDemo();
+  const { isAuthenticated } = useAuth();
+  const apiResult = useApi<ApiUser[]>("/api/users", []);
+
+  return useMemo(() => {
+    if (isDemo && demoStore) {
+      const demoUsers = demoStore.getUsers().map((u) => ({
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        isActive: u.status === "active",
+        isOwner: u.role === "admin",
+        createdAt: u.joinedAt,
+      }));
+      return { data: demoUsers, isLoading: false, error: null };
+    }
+    if (isAuthenticated && apiResult.data.length > 0) {
+      // Normalize field names - production returns snake_case, dev returns camelCase
+      const normalized = apiResult.data.map((u: Record<string, unknown>) => ({
+        id: u.id as string,
+        email: (u.email as string) || "",
+        name: (u.name as string) || "",
+        role: (u.role as ApiUser["role"]) || "requestor",
+        isActive: (u.isActive ?? u.is_active) as boolean ?? true,
+        isOwner: (u.isOwner ?? u.is_owner) as boolean ?? false,
+        createdAt: (u.createdAt ?? u.created_at) as string ?? new Date().toISOString(),
+      }));
+      return { data: normalized, isLoading: false, error: null };
+    }
+    if (isAuthenticated && apiResult.isLoading) return apiResult;
+    return { data: [] as ApiUser[], isLoading: false, error: null };
+  }, [isDemo, isAuthenticated, demoStore, version, apiResult]);
 }

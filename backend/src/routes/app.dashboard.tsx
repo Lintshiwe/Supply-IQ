@@ -7,11 +7,14 @@ import { NeedsAttention } from "@/components/dashboard/NeedsAttention";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { DashboardReorderSection } from "@/components/insights/DashboardReorderSection";
 import { DashboardAnomalySection } from "@/components/insights/DashboardAnomalySection";
+import { RequestorDashboard } from "@/components/dashboard/RequestorDashboard";
+import { ManagerDashboard } from "@/components/dashboard/ManagerDashboard";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 
 import { useStockSummary } from "@/hooks/useInventoryData";
 import { useAlertGenerator } from "@/hooks/useStockAlertGenerator";
 import { useDemo } from "@/hooks/useDemo";
+import { useRole } from "@/hooks/useRole";
 import { useOnboarding, type TourStep } from "@/hooks/useOnboarding";
 
 const TOUR_STEPS: TourStep[] = [
@@ -31,6 +34,7 @@ export const Route = createFileRoute("/app/dashboard")({
 function DashboardPage() {
   const { data: summary } = useStockSummary();
   const { demoStore, isDemo } = useDemo();
+  const { role } = useRole();
   useAlertGenerator();
 
   const items = demoStore?.getItems() ?? [];
@@ -38,7 +42,6 @@ function DashboardPage() {
   const suppliers = demoStore?.getSuppliers() ?? [];
 
   const tour = useOnboarding("dashboard");
-  
 
   // Auto-start tour on first demo visit
   useEffect(() => {
@@ -52,6 +55,15 @@ function DashboardPage() {
     tour.completeTour();
     toast.success("Tour complete! Explore freely or start the walkthrough.");
   };
+
+  // Render role-specific dashboard
+  if (role === "requestor") {
+    return <RequestorDashboard />;
+  }
+
+  if (role === "manager") {
+    return <ManagerDashboard />;
+  }
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
