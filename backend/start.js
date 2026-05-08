@@ -7,6 +7,7 @@ import { randomBytes, createHash } from "node:crypto";
 const PORT = process.env.PORT || 8080;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STATIC_DIR = join(__dirname, "dist", "client");
+const PUBLIC_DIR = join(__dirname, "public");
 const DATABASE_URL = process.env.DATABASE_URL;
 
 const MIME_TYPES = {
@@ -222,6 +223,18 @@ async function ensureTables() {
       created_at TIMESTAMPTZ DEFAULT now()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS scan_logs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      workspace_id UUID NOT NULL,
+      item_id UUID,
+      barcode TEXT NOT NULL,
+      item_name TEXT DEFAULT '',
+      scanned_by TEXT DEFAULT '',
+      user_id TEXT DEFAULT '',
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
 }
 
 // ─── Auth Helpers ────────────────────────────────────────
@@ -312,8 +325,20 @@ async function sendEmail(to, subject, html, text) {
 
 // ─── Static Files ────────────────────────────────────────
 function serveStatic(url, res) {
-  // Try exact match first
-  let filePath = join(STATIC_DIR, url);
+  // Try public/ directory first (for scan.html, etc.)
+  let filePath = join(PUBLIC_DIR, url);
+  if (existsSync(filePath)) {
+    try {
+      const data = readFileSync(filePath);
+      const mime = MIME_TYPES[extname(filePath)] || "application/octet-stream";
+      res.writeHead(200, { "Content-Type": mime, "Content-Length": data.length });
+      res.end(data);
+      return true;
+    } catch {}
+  }
+
+  // Try dist/client/ directory
+  filePath = join(STATIC_DIR, url);
   if (existsSync(filePath)) {
     try {
       const data = readFileSync(filePath);
@@ -923,6 +948,26 @@ async function handleApiRoute(req, res) {
       return json(res, 200, { success: true });
     }
 
+    // ─── Scan Logs ──────────────────────────────────────
+    if (req.url === "/api/scan-log" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const { barcode, itemId, itemName, scannedBy, userId } = body;
+      const [log] = await sql`
+        INSERT INTO scan_logs (workspace_id, item_id, barcode, item_name, scanned_by, user_id)
+        VALUES (${wsId}::uuid, ${itemId || null}::uuid, ${barcode}, ${itemName || ""}, ${scannedBy || ""}, ${userId || ""})
+        RETURNING *`;
+      return json(res, 201, log);
+    }
+    if (req.url === "/api/scan-log" && req.method === "GET") {
+      if (!dbConnected) return json(res, 503, { error: "DB not connected" });
+      const wsId = getWsId(req);
+      if (!wsId) return json(res, 401, { error: "Not authenticated" });
+      const result = await sql`SELECT * FROM scan_logs WHERE workspace_id = ${wsId}::uuid ORDER BY created_at DESC LIMIT 50`;
+      return json(res, 200, result);
+    }
+
     return json(res, 404, { error: "Unknown endpoint" });
   } catch (e) {
     console.error("API error:", e.message);
@@ -963,7 +1008,13 @@ async function start() {
       }
 
       if (req.url?.startsWith("/api/")) return handleApiRoute(req, res);
-      if (req.url && /\.(js|css|svg|png|jpg|woff2|json|ico)$/.test(req.url)) {
+
+      // Serve scan.html from public/ directory
+      if (req.url === "/scan.html" || req.url === "/scan") {
+        if (serveStatic(req.url === "/scan" ? "/scan.html" : req.url, res)) return;
+      }
+
+      if (req.url && /\.(js|css|svg|png|jpg|woff2|json|ico|html)$/.test(req.url)) {
         if (serveStatic(req.url, res)) return;
       }
 

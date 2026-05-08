@@ -56,9 +56,10 @@ h1{font-size:18px;font-weight:600;margin-bottom:4px}
   </div>
 </div>
 
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 const API = '/api/scan';
-let scanner = null; // html5-qrcode instance
+let scanner = null;
 let scanning = false;
 
 // ─── Check what scanner methods are available ───
