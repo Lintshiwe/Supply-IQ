@@ -29,7 +29,7 @@ export function CostByCategoryChart({ items, categories }: Props) {
     const costMap = new Map<string, number>();
     items.forEach((item) => {
       const key = item.categoryId || "uncategorized";
-      costMap.set(key, (costMap.get(key) || 0) + item.currentStock * item.costPrice);
+      costMap.set(key, (costMap.get(key) || 0) + (item.currentStock || 0) * (item.costPrice || 0));
     });
     const catMap = new Map(categories.map((c) => [c.id, c.name]));
     const data = [...costMap.entries()]

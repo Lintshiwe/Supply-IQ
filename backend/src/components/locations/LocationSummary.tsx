@@ -49,7 +49,7 @@ export function LocationSummary({ node, allLocations, items }: LocationSummaryPr
   );
 
   const totalValue = useMemo(
-    () => locationItems.reduce((sum, i) => sum + i.currentStock * i.costPrice, 0),
+    () => locationItems.reduce((sum, i) => sum + (i.currentStock || 0) * (i.costPrice || 0), 0),
     [locationItems],
   );
 

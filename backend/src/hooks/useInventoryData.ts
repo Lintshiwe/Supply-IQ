@@ -24,9 +24,18 @@ function toCamelCase(obj: unknown): unknown {
       const camelKey = key.replace(/_([a-z])/g, (_, c) => (c as string).toUpperCase());
       const camelValue = toCamelCase(value);
       // Coerce numeric strings to actual numbers for known numeric fields
-      result[camelKey] = NUMERIC_FIELDS.has(camelKey) && typeof camelValue === "string"
-        ? Number(camelValue)
-        : camelValue;
+      // Also handle null/undefined by defaulting to 0
+      if (NUMERIC_FIELDS.has(camelKey)) {
+        if (camelValue === null || camelValue === undefined) {
+          result[camelKey] = 0;
+        } else if (typeof camelValue === "string") {
+          result[camelKey] = Number(camelValue);
+        } else {
+          result[camelKey] = camelValue;
+        }
+      } else {
+        result[camelKey] = camelValue;
+      }
     }
     return result;
   }

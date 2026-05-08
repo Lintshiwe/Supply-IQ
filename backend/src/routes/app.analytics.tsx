@@ -72,7 +72,7 @@ function AnalyticsPage() {
   const handleExportStock = () => {
     if (items.length === 0 && movements.length === 0) { toast.error("No data to export"); return; }
     const rows: string[] = ["Section,Name,SKU,Qty,Cost,Value,Status"];
-    items.forEach((i) => rows.push(`Stock,${i.name},${i.sku},${i.currentStock},${i.costPrice},${(i.currentStock * i.costPrice).toFixed(2)},${i.status}`));
+    items.forEach((i) => rows.push(`Stock,${i.name},${i.sku},${i.currentStock || 0},${i.costPrice || 0},${((i.currentStock || 0) * (i.costPrice || 0)).toFixed(2)},${i.status}`));
     rows.push("", "Section,Date,Item,Type,Qty,Reference");
     movements.forEach((m) => rows.push(`Movement,${m.createdAt},${m.itemId},${m.type},${m.quantity},${m.reference}`));
     downloadCsv(rows.join("\n"), "supplyiq-analytics");
@@ -87,7 +87,7 @@ function AnalyticsPage() {
     const costMap = new Map<string, number>();
     items.forEach((item) => {
       const catName = categories.find((c) => c.id === item.categoryId)?.name || "Uncategorized";
-      costMap.set(catName, (costMap.get(catName) || 0) + item.currentStock * item.costPrice);
+      costMap.set(catName, (costMap.get(catName) || 0) + (item.currentStock || 0) * (item.costPrice || 0));
     });
     [...costMap.entries()].sort((a, b) => b[1] - a[1]).forEach(([name, cost]) => rows.push(`Category Cost,${name},${cost.toFixed(2)}`));
     downloadCsv(rows.join("\n"), "supplyiq-supplier-report");

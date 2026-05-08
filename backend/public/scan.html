@@ -32,6 +32,11 @@ h1{font-size:18px;font-weight:600;margin-bottom:4px}
 .error-box p{font-size:13px;color:#fca5a5}
 .info-box{background:#1e3a5f;border-radius:10px;padding:12px;margin-top:8px;text-align:center}
 .info-box p{font-size:12px;color:#93c5fd}
+.stats-box{background:#0f172a;border-radius:8px;padding:12px;margin-top:12px;text-align:left}
+.stat-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #334155}
+.stat-row:last-child{border-bottom:none}
+.stat-label{font-size:12px;color:#64748b}
+.stat-val{font-size:13px;color:#e2e8f0;font-weight:600}
 .status{font-size:11px;color:#64748b;margin-top:4px;min-height:16px}
 </style>
 </head>
@@ -216,13 +221,23 @@ async function doLookup(val) {
       }
     } else {
       const data = await res.json();
-      let cls = data.stock === 0 ? 'out-stock' : (data.stock <= 10 ? 'low-stock' : 'in-stock');
-      let label = data.stock === 0 ? 'Out of Stock' : (data.stock <= 10 ? 'Low Stock' : 'In Stock');
+      let cls = data.stock === 0 ? 'out-stock' : (data.stock <= (data.reorderPoint || 10) ? 'low-stock' : 'in-stock');
+      let label = data.stock === 0 ? 'Out of Stock' : (data.stock <= (data.reorderPoint || 10) ? 'Low Stock' : 'In Stock');
+      let imgHtml = data.imageUrl ? `<img src="${data.imageUrl}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:12px" onerror="this.style.display='none'">` : '';
+      let descHtml = data.description ? `<p style="font-size:12px;color:#94a3b8;margin-bottom:12px">${data.description}</p>` : '';
+      let statsHtml = '';
+      if (data.costPrice !== undefined) statsHtml += `<div class="stat-row"><span class="stat-label">Cost Price</span><span class="stat-val">R${Number(data.costPrice).toFixed(2)}</span></div>`;
+      if (data.sellingPrice !== undefined) statsHtml += `<div class="stat-row"><span class="stat-label">Selling Price</span><span class="stat-val">R${Number(data.sellingPrice).toFixed(2)}</span></div>`;
+      if (data.status) statsHtml += `<div class="stat-row"><span class="stat-label">Status</span><span class="stat-val">${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</span></div>`;
+      if (data.reorderPoint !== undefined) statsHtml += `<div class="stat-row"><span class="stat-label">Reorder Point</span><span class="stat-val">${data.reorderPoint} ${data.unit || 'ea'}</span></div>`;
       resultDiv.innerHTML = `<div class="result-card">
+        ${imgHtml}
         <div class="barcode">${data.barcode || barcode}</div>
         <h2>${data.name}</h2>
         <div class="sku">SKU: ${data.sku}</div>
-        <div class="stock-badge ${cls}">${label}: ${data.stock} ${data.unit || 'ea'}</div>
+        ${descHtml}
+        <div class="stock-badge ${cls}" style="margin-bottom:12px">${label}: ${data.stock} ${data.unit || 'ea'}</div>
+        ${statsHtml ? `<div class="stats-box">${statsHtml}</div>` : ''}
       </div>`;
     }
   } catch(e) {

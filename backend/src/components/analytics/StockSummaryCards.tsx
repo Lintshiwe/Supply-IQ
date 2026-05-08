@@ -9,10 +9,10 @@ interface StockSummaryCardsProps {
 
 export function StockSummaryCards({ items }: StockSummaryCardsProps) {
   const metrics = useMemo(() => {
-    const totalValue = items.reduce((sum, i) => sum + i.currentStock * i.costPrice, 0);
+    const totalValue = items.reduce((sum, i) => sum + (i.currentStock || 0) * (i.costPrice || 0), 0);
     const totalSkus = items.length;
-    const avgStock = items.length > 0 ? Math.round(items.reduce((sum, i) => sum + i.currentStock, 0) / items.length) : 0;
-    const belowReorder = items.filter((i) => i.currentStock < i.reorderPoint).length;
+    const avgStock = items.length > 0 ? Math.round(items.reduce((sum, i) => sum + (i.currentStock || 0), 0) / items.length) : 0;
+    const belowReorder = items.filter((i) => (i.currentStock || 0) < (i.reorderPoint || 0)).length;
     return { totalValue, totalSkus, avgStock, belowReorder };
   }, [items]);
 

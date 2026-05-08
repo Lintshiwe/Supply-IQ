@@ -32,7 +32,7 @@ export function LowStockSuggestions({ items, supplierId, lineItems, onAdd }: Low
       id: crypto.randomUUID(),
       itemId: item.id,
       quantity: Math.max(1, suggestedQty),
-      unitCost: item.costPrice,
+      unitCost: item.costPrice || 0,
     });
   }
 
