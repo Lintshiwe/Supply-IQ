@@ -1029,9 +1029,12 @@ async function start() {
 
       if (req.url?.startsWith("/api/")) return handleApiRoute(req, res);
 
-      // Serve scan.html from public/ directory
+      // Serve static pages from public/ directory
       if (req.url === "/scan.html" || req.url === "/scan") {
         if (serveStatic(req.url === "/scan" ? "/scan.html" : req.url, res)) return;
+      }
+      if (req.url === "/barcodes.html" || req.url === "/barcodes") {
+        if (serveStatic(req.url === "/barcodes" ? "/barcodes.html" : req.url, res)) return;
       }
 
       if (req.url && /\.(js|css|svg|png|jpg|woff2|json|ico|html)$/.test(req.url)) {

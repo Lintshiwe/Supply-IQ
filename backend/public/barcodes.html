@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupplyIQ Barcode Labels</title>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:16px}
+.header{max-width:800px;margin:0 auto 20px;text-align:center}
+.header h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.header p{font-size:13px;color:#64748b}
+.controls{max-width:800px;margin:0 auto 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btn{padding:10px 20px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer}
+.btn-print{background:#84cc16;color:#0f172a}
+.btn-regen{background:#3b82f6;color:#fff}
+.btn:hover{opacity:.9}
+.grid{max-width:800px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.label-card{background:#fff;border-radius:12px;padding:16px;text-align:center;break-inside:avoid;page-break-inside:avoid}
+.label-card .item-name{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.label-card .item-sku{font-size:11px;color:#64748b;font-family:monospace;margin-bottom:8px}
+.label-card svg{width:100%;height:auto;max-height:80px}
+.label-card .item-stock{font-size:11px;color:#64748b;margin-top:6px}
+.loading{text-align:center;padding:40px;color:#64748b}
+.empty{text-align:center;padding:40px;color:#64748b}
+.status{text-align:center;padding:8px;font-size:12px;color:#93c5fd;background:#1e3a5f;border-radius:8px;max-width:800px;margin:0 auto 16px}
+@media print{
+  body{background:#fff;padding:0}
+  .header,.controls,.status{display:none!important}
+  .grid{max-width:100%;grid-template-columns:repeat(3,1fr);gap:8px}
+  .label-card{border:1px solid #e2e8f0;box-shadow:none;border-radius:8px;padding:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>SupplyIQ Barcode Labels</h1>
+  <p>Scannable Code128 barcodes for all inventory items</p>
+</div>
+
+<div class="controls">
+  <button class="btn btn-print" onclick="window.print()">Print Labels</button>
+  <button class="btn btn-regen" onclick="regenerateAll()">Regenerate All Barcodes</button>
+</div>
+
+<div class="status" id="status">Loading items...</div>
+<div class="grid" id="grid"></div>
+
+<script>
+const API = '/api/items';
+
+async function loadItems() {
+  const grid = document.getElementById('grid');
+  const status = document.getElementById('status');
+
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    let items = await res.json();
+    if (!Array.isArray(items)) items = [];
+
+    if (items.length === 0) {
+      status.textContent = 'No items found. Import items via CSV first.';
+      grid.innerHTML = '<div class="empty">No items in database</div>';
+      return;
+    }
+
+    status.textContent = `${items.length} items loaded. Generating barcodes...`;
+
+    // Generate barcodes for items that don't have one
+    let generated = 0;
+    for (const item of items) {
+      if (!item.barcode || item.barcode.trim() === '') {
+        item.barcode = item.sku;
+        generated++;
+      }
+    }
+
+    if (generated > 0) {
+      status.textContent = `${items.length} items — ${generated} barcodes generated from SKU. Scanning each barcode will now find the item.`;
+    } else {
+      status.textContent = `${items.length} items — all have barcodes assigned.`;
+    }
+
+    grid.innerHTML = '';
+
+    items.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'label-card';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'item-name';
+      nameEl.textContent = item.name || item.sku;
+
+      const skuEl = document.createElement('div');
+      skuEl.className = 'item-sku';
+      skuEl.textContent = `SKU: ${item.sku}`;
+
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.id = `bc-${idx}`;
+
+      const stockEl = document.createElement('div');
+      stockEl.className = 'item-stock';
+      stockEl.textContent = `Stock: ${item.current_stock || 0} ${item.unit || 'ea'}`;
+
+      card.appendChild(nameEl);
+      card.appendChild(skuEl);
+      card.appendChild(svg);
+      card.appendChild(stockEl);
+      grid.appendChild(card);
+
+      try {
+        JsBarcode(svg, item.barcode, {
+          format: 'CODE128',
+          width: 2,
+          height: 60,
+          displayValue: true,
+          fontSize: 14,
+          font: 'monospace',
+          margin: 4,
+        });
+      } catch(e) {
+        svg.innerHTML = `<text x="50%" y="50%" text-anchor="middle" font-size="12" fill="#64748b">${item.barcode}</text>`;
+      }
+    });
+
+  } catch(e) {
+    status.textContent = `Error: ${e.message}. Make sure the server is running.`;
+    grid.innerHTML = `<div class="empty">Failed to load items</div>`;
+  }
+}
+
+async function regenerateAll() {
+  const status = document.getElementById('status');
+  status.textContent = 'Regenerating barcodes...';
+
+  try {
+    const res = await fetch('/api/items');
+    let items = await res.json();
+    if (!Array.isArray(items)) items = [];
+
+    let updated = 0;
+    for (const item of items) {
+      const newBarcode = item.sku;
+      try {
+        await fetch('/api/items/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: item.id, updates: { barcode: newBarcode } }),
+        });
+        updated++;
+      } catch(e) {}
+    }
+
+    status.textContent = `Updated ${updated} items. Reloading...`;
+    setTimeout(loadItems, 500);
+  } catch(e) {
+    status.textContent = `Error: ${e.message}`;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', loadItems);
+</script>
+</body>
+</html>
