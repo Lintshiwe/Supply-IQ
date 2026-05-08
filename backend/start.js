@@ -656,6 +656,16 @@ async function handleApiRoute(req, res) {
         imageUrl: item.image_url,
       });
     }
+    // Assign barcode to item by SKU — no auth required (public scanner)
+    if (req.url === "/api/items/assign-barcode" && req.method === "POST") {
+      if (!dbConnected) return json(res, 503, { error: "Database not connected" });
+      const { barcode, sku } = body;
+      if (!barcode || !sku) return json(res, 400, { error: "barcode and sku required" });
+      const [item] = await sql`SELECT id, sku, name FROM items WHERE sku = ${sku} LIMIT 1`;
+      if (!item) return json(res, 404, { error: `Item with SKU ${sku} not found` });
+      await sql`UPDATE items SET barcode = ${barcode}, updated_at = now() WHERE id = ${item.id}`;
+      return json(res, 200, { id: item.id, name: item.name, sku: item.sku, barcode });
+    }
     if (req.url === "/api/items" && req.method === "POST") {
       if (!dbConnected) return json(res, 503, { error: "DB not connected" });
       const wsId = getWsId(req);

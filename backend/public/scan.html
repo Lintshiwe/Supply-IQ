@@ -15,7 +15,8 @@ h1{font-size:18px;font-weight:600;margin-bottom:4px}
 .btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;transition:opacity .2s}
 .btn-start{background:#84cc16;color:#0f172a}
 .btn-stop{background:#334155;color:#e2e8f0}
-.btn-stop:hover,.btn-start:hover{opacity:.9}
+.btn-assign{background:#3b82f6;color:#fff}
+.btn-stop:hover,.btn-start:hover,.btn-assign:hover{opacity:.9}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .result-card{background:#1e293b;border-radius:12px;padding:16px;margin-top:12px;text-align:center}
 .result-card h2{font-size:16px;font-weight:600;margin-bottom:2px}
@@ -32,6 +33,8 @@ h1{font-size:18px;font-weight:600;margin-bottom:4px}
 .error-box p{font-size:13px;color:#fca5a5}
 .info-box{background:#1e3a5f;border-radius:10px;padding:12px;margin-top:8px;text-align:center}
 .info-box p{font-size:12px;color:#93c5fd}
+.success-box{background:#065f46;border-radius:10px;padding:12px;margin-top:8px;text-align:center}
+.success-box p{font-size:13px;color:#6ee7b7}
 .stats-box{background:#0f172a;border-radius:8px;padding:12px;margin-top:12px;text-align:left}
 .stat-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #334155}
 .stat-row:last-child{border-bottom:none}
@@ -46,12 +49,24 @@ h1{font-size:18px;font-weight:600;margin-bottom:4px}
 .scan-log-entry .result{font-size:10px}
 .scan-log-entry .result.found{color:#22c55e}
 .scan-log-entry .result.not-found{color:#ef4444}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{flex:1;padding:8px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;background:#334155;color:#94a3b8;transition:all .2s}
+.tab.active{background:#84cc16;color:#0f172a}
+.assign-section{border-top:1px solid #334155;margin-top:16px;padding-top:16px}
+.assign-section input{width:100%;padding:12px;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;font-size:16px;text-align:center;font-family:monospace;outline:none;margin-bottom:8px}
+.assign-section input:focus{border-color:#3b82f6}
 </style>
 </head>
 <body>
 
 <div class="card">
   <h1>SupplyIQ Scanner</h1>
+
+  <div class="tabs">
+    <button class="tab active" id="tabLookup" onclick="switchTab('lookup')">Lookup</button>
+    <button class="tab" id="tabAssign" onclick="switchTab('assign')">Scan to Assign</button>
+  </div>
+
   <p class="sub" id="subtitle">Type a barcode or SKU to look up an item</p>
 
   <div id="reader"></div>
@@ -67,10 +82,21 @@ h1{font-size:18px;font-weight:600;margin-bottom:4px}
     <div id="scanLogEntries"></div>
   </div>
 
-  <div class="section">
+  <!-- LOOKUP MODE -->
+  <div id="lookupSection" class="section">
     <p style="font-size:12px;color:#64748b;margin-bottom:8px">Enter barcode or SKU</p>
     <input type="text" id="barcodeInput" placeholder="49100001371 or STK-1001" autocomplete="off" inputmode="text">
     <button class="btn btn-start" onclick="doLookup()">Look Up</button>
+  </div>
+
+  <!-- ASSIGN MODE -->
+  <div id="assignSection" class="assign-section" style="display:none">
+    <p style="font-size:12px;color:#64748b;margin-bottom:8px">Step 1: Scan a physical barcode</p>
+    <input type="text" id="assignBarcode" placeholder="Scan or type barcode" autocomplete="off" inputmode="text" readonly>
+    <p style="font-size:12px;color:#64748b;margin-bottom:8px;margin-top:12px">Step 2: Enter the SKU for this item</p>
+    <input type="text" id="assignSku" placeholder="e.g. STK-1001" autocomplete="off" inputmode="text">
+    <button class="btn btn-assign" onclick="doAssign()">Assign Barcode to SKU</button>
+    <p style="font-size:11px;color:#64748b;margin-top:8px">This will update the item's barcode in the database so future scans find it.</p>
   </div>
 </div>
 
@@ -79,7 +105,24 @@ h1{font-size:18px;font-weight:600;margin-bottom:4px}
 const API = '/api/scan';
 let scanner = null;
 let scanning = false;
+let currentTab = 'lookup';
 let scanLogEntries = [];
+let assignModeScanned = false;
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabLookup').classList.toggle('active', tab === 'lookup');
+  document.getElementById('tabAssign').classList.toggle('active', tab === 'assign');
+  document.getElementById('lookupSection').style.display = tab === 'lookup' ? '' : 'none';
+  document.getElementById('assignSection').style.display = tab === 'assign' ? '' : 'none';
+  document.getElementById('lookupResult').innerHTML = '';
+  assignModeScanned = false;
+  if (tab === 'lookup') {
+    document.getElementById('subtitle').textContent = 'Type a barcode or SKU to look up an item';
+  } else {
+    document.getElementById('subtitle').textContent = 'Scan a barcode, then enter the SKU to link them';
+  }
+}
 
 function addScanLog(value, format, found) {
   scanLogEntries.unshift({ value, format, found, time: new Date().toLocaleTimeString() });
@@ -101,17 +144,24 @@ function renderScanLog() {
   ).join('');
 }
 
+function handleScan(raw, format) {
+  if (currentTab === 'assign') {
+    document.getElementById('assignBarcode').value = raw;
+    document.getElementById('scanStatus').textContent = `Scanned [${format}]: ${raw}`;
+    assignModeScanned = true;
+    addScanLog(raw, format, null);
+  } else {
+    document.getElementById('barcodeInput').value = raw;
+    document.getElementById('scanStatus').textContent = `Scanned [${format}]: ${raw}`;
+    doLookup(raw).then(found => addScanLog(raw, format, found));
+  }
+}
+
 function checkScannerSupport() {
   const hasBarcodeDetector = typeof BarcodeDetector !== 'undefined';
   const hasHtml5Qr = typeof Html5Qrcode !== 'undefined';
-  if (hasBarcodeDetector) {
+  if (hasBarcodeDetector || hasHtml5Qr) {
     document.getElementById('startBtn').style.display = 'block';
-    document.getElementById('subtitle').textContent = 'Camera barcode scanner ready';
-  } else if (hasHtml5Qr) {
-    document.getElementById('startBtn').style.display = 'block';
-    document.getElementById('subtitle').textContent = 'Camera scanner ready (html5-qrcode)';
-  } else {
-    document.getElementById('subtitle').textContent = 'Enter barcode or SKU below to look up';
   }
 }
 
@@ -142,10 +192,7 @@ async function startNativeScanner() {
           const format = barcodes[0].format;
           if (raw !== lastScan) {
             lastScan = raw;
-            document.getElementById('barcodeInput').value = raw;
-            document.getElementById('scanStatus').textContent = `Scanned [${format}]: ${raw}`;
-            const found = await doLookup(raw);
-            addScanLog(raw, format, found);
+            handleScan(raw, format);
           }
         }
       } catch(e) {}
@@ -180,9 +227,7 @@ async function startHtml5Scanner() {
       (text) => {
         if (text !== lastScan) {
           lastScan = text;
-          document.getElementById('barcodeInput').value = text;
-          document.getElementById('scanStatus').textContent = 'Scanned: ' + text;
-          doLookup(text).then(found => addScanLog(text, '1D/QR', found));
+          handleScan(text, '1D/QR');
         }
       },
       () => {}
@@ -221,7 +266,7 @@ async function doLookup(val) {
   const barcode = val || document.getElementById('barcodeInput').value.trim();
   if (!barcode) return false;
 
-  const btn = document.querySelector('.section .btn');
+  const btn = document.querySelector('#lookupSection .btn');
   const resultDiv = document.getElementById('lookupResult');
 
   btn.disabled = true;
@@ -243,7 +288,7 @@ async function doLookup(val) {
         resultDiv.innerHTML = `<div class="error-box">
           <p>Not found: <strong>${barcode}</strong></p>
           <p style="font-size:11px;margin-top:4px">No item exists with this barcode/SKU in the database.</p>
-          <p style="font-size:11px;margin-top:4px">Import items via CSV in the Catalog page first.</p>
+          <p style="font-size:11px;margin-top:4px">Try the "Scan to Assign" tab to link a scanned barcode to an SKU.</p>
         </div>`;
       } else {
         resultDiv.innerHTML = `<div class="error-box">
@@ -292,6 +337,42 @@ async function doLookup(val) {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Look Up';
+  }
+}
+
+async function doAssign() {
+  const barcode = document.getElementById('assignBarcode').value.trim();
+  const sku = document.getElementById('assignSku').value.trim();
+  const resultDiv = document.getElementById('lookupResult');
+
+  if (!barcode) { resultDiv.innerHTML = '<div class="error-box"><p>Scan a barcode first.</p></div>'; return; }
+  if (!sku) { resultDiv.innerHTML = '<div class="error-box"><p>Enter the SKU for this item.</p></div>'; return; }
+
+  resultDiv.innerHTML = '<div class="info-box"><p>Linking barcode to SKU...</p></div>';
+
+  try {
+    const res = await fetch('/api/items/assign-barcode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barcode, sku }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      resultDiv.innerHTML = `<div class="error-box"><p>Error: ${data.error || 'Failed to assign'}</p></div>`;
+      addScanLog(barcode, 'assign', false);
+    } else {
+      resultDiv.innerHTML = `<div class="success-box">
+        <p>Barcode assigned successfully!</p>
+        <p style="font-size:11px;margin-top:4px">${data.name} (${data.sku}) now scans as <strong>${barcode}</strong></p>
+      </div>`;
+      addScanLog(barcode, 'assigned', true);
+      document.getElementById('assignBarcode').value = '';
+      document.getElementById('assignSku').value = '';
+      assignModeScanned = false;
+    }
+  } catch(e) {
+    resultDiv.innerHTML = `<div class="error-box"><p>Connection error: ${e.message}</p></div>`;
   }
 }
 
