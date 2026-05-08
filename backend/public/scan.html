@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>SupplyIQ Barcode Scanner</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<title>SupplyIQ Scanner</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
 .card{background:#1e293b;border-radius:16px;padding:20px;width:100%;max-width:400px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,.4)}
 h1{font-size:18px;font-weight:600;margin-bottom:4px}
 .sub{font-size:12px;color:#64748b;margin-bottom:16px}
-#reader{width:100%;max-width:400px;border-radius:12px;overflow:hidden;margin-bottom:12px}
-#reader video{border-radius:12px}
+#reader{width:100%;max-width:400px;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#000;min-height:240px;display:flex;align-items:center;justify-content:center}
+#reader video{border-radius:12px;width:100%}
 .btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;transition:opacity .2s}
 .btn-start{background:#84cc16;color:#0f172a}
 .btn-stop{background:#334155;color:#e2e8f0}
 .btn-stop:hover,.btn-start:hover{opacity:.9}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .result-card{background:#1e293b;border-radius:12px;padding:16px;margin-top:12px;text-align:center}
 .result-card h2{font-size:16px;font-weight:600;margin-bottom:2px}
 .result-card .sku{font-family:monospace;font-size:12px;color:#94a3b8;margin-bottom:8px}
@@ -25,116 +25,198 @@ h1{font-size:18px;font-weight:600;margin-bottom:4px}
 .in-stock{background:#065f46;color:#6ee7b7}
 .low-stock{background:#78350f;color:#fbbf24}
 .out-stock{background:#7f1d1d;color:#fca5a5}
-.manual{border-top:1px solid #334155;margin-top:16px;padding-top:16px}
-.manual input{width:100%;padding:12px;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;font-size:16px;text-align:center;font-family:monospace;outline:none;margin-bottom:8px}
-.manual input:focus{border-color:#84cc16}
-.error{background:#7f1d1d;border-radius:10px;padding:12px;margin-top:8px;text-align:center}
-.error p{font-size:13px;color:#fca5a5}
-.scan-count{font-size:11px;color:#64748b;margin-top:4px}
+.section{border-top:1px solid #334155;margin-top:16px;padding-top:16px}
+.section input{width:100%;padding:12px;border-radius:10px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;font-size:16px;text-align:center;font-family:monospace;outline:none;margin-bottom:8px}
+.section input:focus{border-color:#84cc16}
+.error-box{background:#7f1d1d;border-radius:10px;padding:12px;margin-top:8px;text-align:center}
+.error-box p{font-size:13px;color:#fca5a5}
+.info-box{background:#1e3a5f;border-radius:10px;padding:12px;margin-top:8px;text-align:center}
+.info-box p{font-size:12px;color:#93c5fd}
+.status{font-size:11px;color:#64748b;margin-top:4px;min-height:16px}
 </style>
 </head>
 <body>
 
 <div class="card">
   <h1>📦 SupplyIQ Scanner</h1>
-  <p class="sub">Point camera at a barcode to scan</p>
+  <p class="sub" id="subtitle">Type a barcode or SKU to look up an item</p>
 
   <div id="reader"></div>
 
-  <button class="btn btn-start" id="startBtn" onclick="startScanner()">Start Scanner</button>
-  <button class="btn btn-stop" id="stopBtn" onclick="stopScanner()" style="display:none">Stop Scanner</button>
-  <p class="scan-count" id="scanCount"></p>
+  <button class="btn btn-start" id="startBtn" onclick="startScanner()" style="display:none">📷 Start Camera Scanner</button>
+  <button class="btn btn-stop" id="stopBtn" onclick="stopScanner()" style="display:none">Stop Camera</button>
+  <p class="status" id="scanStatus"></p>
 
-  <div id="scanResult"></div>
+  <div id="lookupResult"></div>
 
-  <div class="manual">
-    <p style="font-size:12px;color:#64748b;margin-bottom:8px">Or type a barcode manually</p>
-    <input type="text" id="manualInput" placeholder="Type barcode or SKU..." autocomplete="off">
-    <button class="btn btn-start" onclick="manualLookup()" style="width:100%">Look Up</button>
+  <div class="section">
+    <p style="font-size:12px;color:#64748b;margin-bottom:8px">Enter barcode or SKU</p>
+    <input type="text" id="barcodeInput" placeholder="49100001371 or STK-1001" autocomplete="off" inputmode="text">
+    <button class="btn btn-start" onclick="doLookup()">Look Up</button>
   </div>
 </div>
 
 <script>
-let html5QrCode = null;
-let isScanning = false;
 const API = '/api/scan';
-let scanCount = 0;
+let scanner = null; // html5-qrcode instance
+let scanning = false;
 
-function startScanner() {
-  if (isScanning) return;
-
-  document.getElementById('startBtn').style.display = 'none';
-  document.getElementById('stopBtn').style.display = 'block';
-  document.getElementById('scanResult').innerHTML = '';
-
-  html5QrCode = new Html5Qrcode("reader");
-  const config = {
-    fps: 10,
-    qrbox: { width: 300, height: 120 },
-    aspectRatio: 1.0,
-  };
-
-  html5QrCode.start(
-    { facingMode: "environment" },
-    config,
-    onScanSuccess,
-    onScanFailure
-  ).then(() => {
-    isScanning = true;
-  }).catch(err => {
-    document.getElementById('scanResult').innerHTML =
-      `<div class="error"><p>Camera error: ${err}. Try manual lookup below.</p></div>`;
-    stopScanner();
-  });
-}
-
-function stopScanner() {
-  if (html5QrCode && isScanning) {
-    html5QrCode.stop().then(() => {
-      html5QrCode.clear();
-      isScanning = false;
-      document.getElementById('startBtn').style.display = 'block';
-      document.getElementById('stopBtn').style.display = 'none';
-    }).catch(() => {});
+// ─── Check what scanner methods are available ───
+function checkScannerSupport() {
+  const hasBarcodeDetector = typeof BarcodeDetector !== 'undefined';
+  const hasHtml5Qr = typeof Html5Qrcode !== 'undefined';
+  
+  if (hasBarcodeDetector) {
+    document.getElementById('startBtn').style.display = 'block';
+    document.getElementById('subtitle').textContent = 'Camera barcode scanner ready';
+  } else if (hasHtml5Qr) {
+    document.getElementById('startBtn').style.display = 'block';
+    document.getElementById('subtitle').textContent = 'Camera scanner ready (html5-qrcode)';
+  } else {
+    document.getElementById('subtitle').textContent = 'Enter barcode or SKU below to look up';
   }
 }
 
-function onScanSuccess(decodedText) {
-  // Prevent duplicate scans within 2 seconds
-  const now = Date.now();
-  if (window._lastScan && now - window._lastScan < 2000) return;
-  window._lastScan = now;
-  scanCount++;
-  document.getElementById('scanCount').textContent = `Scanned: ${scanCount}`;
-  lookup(decodedText);
+// ─── Native BarcodeDetector API (Chrome Android, no library needed) ───
+async function startNativeScanner() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'environment', width: 640, height: 480 } 
+    });
+    
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.setAttribute('playsinline', 'true');
+    video.play();
+    
+    const reader = document.getElementById('reader');
+    reader.innerHTML = '';
+    reader.appendChild(video);
+    
+    const detector = new BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf', 'qr_code'] });
+    
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('stopBtn').style.display = 'block';
+    document.getElementById('scanStatus').textContent = 'Camera active — point at barcode';
+    scanning = true;
+    
+    let lastScan = '';
+    async function scan() {
+      if (!scanning) return;
+      try {
+        const barcodes = await detector.detect(video);
+        if (barcodes.length > 0 && barcodes[0].rawValue !== lastScan) {
+          lastScan = barcodes[0].rawValue;
+          document.getElementById('barcodeInput').value = lastScan;
+          document.getElementById('scanStatus').textContent = 'Scanned: ' + lastScan;
+          await doLookup(lastScan);
+        }
+      } catch {}
+      if (scanning) requestAnimationFrame(scan);
+    }
+    requestAnimationFrame(scan);
+    
+    document.getElementById('stopBtn').onclick = () => {
+      scanning = false;
+      stream.getTracks().forEach(t => t.stop());
+      reader.innerHTML = '';
+      document.getElementById('startBtn').style.display = 'block';
+      document.getElementById('stopBtn').style.display = 'none';
+      document.getElementById('scanStatus').textContent = '';
+    };
+  } catch(e) {
+    document.getElementById('lookupResult').innerHTML = 
+      `<div class="error-box"><p>Camera error: ${e.message}. Use manual entry below.</p></div>`;
+  }
 }
 
-function onScanFailure() {
-  // Scanner couldn't find a barcode in this frame — normal, ignore
+// ─── html5-qrcode fallback ───
+async function startHtml5Scanner() {
+  try {
+    scanner = new Html5Qrcode("reader");
+    scanning = true;
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('stopBtn').style.display = 'block';
+    document.getElementById('scanStatus').textContent = 'Camera active — point at barcode';
+    
+    await scanner.start(
+      { facingMode: "environment" },
+      { fps: 8, qrbox: { width: 300, height: 100 }, aspectRatio: 1.0 },
+      (text) => {
+        document.getElementById('barcodeInput').value = text;
+        document.getElementById('scanStatus').textContent = 'Scanned: ' + text;
+        doLookup(text);
+      },
+      () => {} // ignore scan failures
+    );
+  } catch(e) {
+    document.getElementById('lookupResult').innerHTML = 
+      `<div class="error-box"><p>Camera error: ${e.message}. Use manual entry below.</p></div>`;
+    stopScanner();
+  }
 }
 
-async function lookup(barcode) {
-  const resultDiv = document.getElementById('scanResult');
-  resultDiv.innerHTML = '<p style="color:#94a3b8;padding:12px">Looking up ' + barcode + '...</p>';
+function startScanner() {
+  if (typeof BarcodeDetector !== 'undefined') {
+    startNativeScanner();
+  } else if (typeof Html5Qrcode !== 'undefined') {
+    startHtml5Scanner();
+  } else {
+    document.getElementById('lookupResult').innerHTML = 
+      '<div class="error-box"><p>Camera scanning not supported on this browser. Use manual entry.</p></div>';
+  }
+}
+
+function stopScanner() {
+  scanning = false;
+  if (scanner) {
+    scanner.stop().then(() => scanner.clear()).catch(() => {});
+    scanner = null;
+  }
+  document.getElementById('reader').innerHTML = '';
+  document.getElementById('startBtn').style.display = 'block';
+  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('scanStatus').textContent = '';
+}
+
+// ─── Lookup (called by scan OR manual input) ───
+async function doLookup(val) {
+  const barcode = val || document.getElementById('barcodeInput').value.trim();
+  if (!barcode) return;
+  
+  const btn = document.querySelector('.section .btn');
+  const resultDiv = document.getElementById('lookupResult');
+  
+  btn.disabled = true;
+  btn.textContent = 'Looking up...';
+  resultDiv.innerHTML = '<div class="info-box"><p>Searching for: ' + barcode + '</p></div>';
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
+  const timeout = setTimeout(() => controller.abort(), 12000);
 
   try {
-    const res = await fetch(`${API}?barcode=${encodeURIComponent(barcode)}`, {
-      signal: controller.signal
+    const res = await fetch(API + '?barcode=' + encodeURIComponent(barcode), {
+      signal: controller.signal,
     });
     clearTimeout(timeout);
-    const data = await res.json();
-
+    
     if (!res.ok) {
-      resultDiv.innerHTML = `<div class="error">
-        <p>Not Found: <strong>${barcode}</strong></p>
-        <p style="font-size:11px;margin-top:4px">Import items to the catalog first, then try again.</p>
-      </div>`;
+      const err = await res.json().catch(() => ({}));
+      if (res.status === 404) {
+        resultDiv.innerHTML = `<div class="error-box">
+          <p>Not found: <strong>${barcode}</strong></p>
+          <p style="font-size:11px;margin-top:4px">No item exists with this barcode/SKU in the database.</p>
+          <p style="font-size:11px;margin-top:4px">Import items via CSV in the Catalog page first.</p>
+        </div>`;
+      } else {
+        resultDiv.innerHTML = `<div class="error-box">
+          <p>Error ${res.status}: ${err.error || 'Unknown error'}</p>
+        </div>`;
+      }
     } else {
-      let cls = data.stock === 0 ? 'out-stock' : data.stock <= 10 ? 'low-stock' : 'in-stock';
-      let label = data.stock === 0 ? 'Out of Stock' : data.stock <= 10 ? 'Low Stock' : 'In Stock';
+      const data = await res.json();
+      let cls = data.stock === 0 ? 'out-stock' : (data.stock <= 10 ? 'low-stock' : 'in-stock');
+      let label = data.stock === 0 ? 'Out of Stock' : (data.stock <= 10 ? 'Low Stock' : 'In Stock');
       resultDiv.innerHTML = `<div class="result-card">
         <div class="barcode">${data.barcode || barcode}</div>
         <h2>${data.name}</h2>
@@ -142,49 +224,50 @@ async function lookup(barcode) {
         <div class="stock-badge ${cls}">${label}: ${data.stock} ${data.unit || 'ea'}</div>
       </div>`;
     }
-  } catch (e) {
+  } catch(e) {
     clearTimeout(timeout);
     if (e.name === 'AbortError') {
-      resultDiv.innerHTML = `<div class="error">
-        <p>Server timeout — waking up...</p>
-        <p style="font-size:11px;margin-top:4px">Free server sleeps when idle. Try again in 10 seconds.</p>
-        <button class="btn btn-start" style="margin-top:8px" onclick="lookup('${barcode}')">Retry</button>
+      resultDiv.innerHTML = `<div class="error-box">
+        <p>Server timeout — waking up from sleep</p>
+        <p style="font-size:11px;margin-top:4px">Wait 15 seconds and try again.</p>
+        <button class="btn btn-start" style="margin-top:8px" onclick="doLookup('${barcode}')">Retry</button>
       </div>`;
     } else {
-      resultDiv.innerHTML = `<div class="error">
-        <p>Connection failed — server is starting up</p>
-        <p style="font-size:11px;margin-top:4px">First request wakes the server (~30s). Try again.</p>
-        <button class="btn btn-start" style="margin-top:8px" onclick="lookup('${barcode}')">Retry</button>
+      resultDiv.innerHTML = `<div class="error-box">
+        <p>Connection error — is the server running?</p>
+        <button class="btn btn-start" style="margin-top:8px" onclick="doLookup('${barcode}')">Retry</button>
       </div>`;
-      // Wake up the server by hitting the root
-      fetch('/', { signal: AbortSignal.timeout(3000) }).catch(() => {});
+      // Ping server to wake it
+      fetch('/', { signal: AbortSignal.timeout(5000) }).catch(() => {});
     }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Look Up';
   }
 }
 
-function manualLookup() {
-  const val = document.getElementById('manualInput').value.trim();
-  if (!val) return;
-  lookup(val);
-}
-
-document.getElementById('manualInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') manualLookup();
+// ─── Events ───
+document.getElementById('barcodeInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doLookup();
 });
 
-// Auto-lookup from URL param
-const params = new URLSearchParams(window.location.search);
-const bc = params.get('barcode');
+// URL param auto-lookup
+const urlParams = new URLSearchParams(window.location.search);
+const bc = urlParams.get('barcode');
 if (bc) {
-  document.getElementById('manualInput').value = bc;
-  lookup(bc);
+  document.getElementById('barcodeInput').value = bc;
+  setTimeout(() => doLookup(bc), 500);
 }
 
-// Wake up server on page load (free tier cold start)
-window.addEventListener('load', () => {
-  fetch('/api/scan?barcode=wakeup', { signal: AbortSignal.timeout(5000) })
-    .then(() => document.getElementById('scanCount').textContent = 'Server ready')
-    .catch(() => document.getElementById('scanCount').textContent = 'Waking server...');
+// Check scanner support on load
+window.addEventListener('DOMContentLoaded', () => {
+  // Delay to allow html5-qrcode script to load
+  setTimeout(checkScannerSupport, 1500);
+  
+  // Wake server
+  fetch('/', { signal: AbortSignal.timeout(3000) })
+    .then(() => document.getElementById('scanStatus').textContent = 'Server connected')
+    .catch(() => document.getElementById('scanStatus').textContent = 'Server sleeping - first request may be slow');
 });
 </script>
 </body>
